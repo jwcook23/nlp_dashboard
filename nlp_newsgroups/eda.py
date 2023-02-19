@@ -6,4 +6,4 @@ news = data.load()
 
 convert = vectorize.transform()
 
-convert.get_bigram(news.data_all['text'])
+bigram = convert.get_ngram(news.data_all['text'], ngram_range=(2,2))

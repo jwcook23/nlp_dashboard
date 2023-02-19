@@ -12,28 +12,27 @@ class transform():
         self.num_features = 1000
 
     
-    def get_bigram(self, text):
+    def get_ngram(self, text, ngram_range):
     
         vectorizer = CountVectorizer(
             max_df=self.max_df, min_df=self.min_df, max_features=self.num_features, stop_words=self.stop_words,
-            ngram_range=(2,2)
+            ngram_range=ngram_range
         )
 
         matrix = vectorizer.fit_transform(text)
 
         terms = np.array(vectorizer.get_feature_names_out())
 
-        count = np.asarray(matrix.sum(axis=0)).ravel()
-
-        bigram = pd.DataFrame({
+        ngram = pd.DataFrame({
             'terms': terms,
-            'count': count
+            'term_count': np.asarray(matrix.sum(axis=0)).ravel(),
+            'document_count': np.asarray((matrix>0).sum(axis=0)).ravel()
         })
-        bigram = bigram.sort_values('count', ascending=False)
+        ngram = ngram.sort_values('term_count', ascending=False)
 
-        np.where(terms=='ax ax')
-
-        document, _ = matrix[:,159].nonzero()
+        # TODO: display example documents when a term is selected
+        # np.where(terms=='phone calls') TODO: how to find all not just the first?
+        # document, _ = matrix[:,159].nonzero()
 
 
     def get_tfidf(self, text):
