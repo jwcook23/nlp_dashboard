@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 
-class load():
+class data():
 
     def __init__(self):
 
@@ -47,4 +47,4 @@ class load():
 
 if __name__ == '__main__':
 
-    news = load()
+    news = data()

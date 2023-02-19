@@ -2,7 +2,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 import pandas as pd
 import numpy as np
 
-class transform():
+class vectorize():
 
     def __init__(self):
 
@@ -15,8 +15,8 @@ class transform():
     def get_ngram(self, text, ngram_range):
     
         vectorizer = CountVectorizer(
-            max_df=self.max_df, min_df=self.min_df, max_features=self.num_features, stop_words=self.stop_words,
-            ngram_range=ngram_range
+            max_df=self.max_df, min_df=self.min_df, max_features=self.num_features, 
+            stop_words=self.stop_words, ngram_range=ngram_range
         )
 
         matrix = vectorizer.fit_transform(text)
@@ -30,15 +30,14 @@ class transform():
         })
         ngram = ngram.sort_values('term_count', ascending=False)
 
-        # TODO: display example documents when a term is selected
-        # np.where(terms=='phone calls') TODO: how to find all not just the first?
-        # document, _ = matrix[:,159].nonzero()
+        return ngram
 
 
     def get_tfidf(self, text):
 
         tfidf_vectorizer = TfidfVectorizer(
-            max_df=self.max_df, min_df=self.min_df, max_features=self.num_features, stop_words=self.stop_words
+            max_df=self.max_df, min_df=self.min_df, max_features=self.num_features, 
+            stop_words=self.stop_words
         )
         self.tfidf = tfidf_vectorizer.fit_transform(text)
 
@@ -46,6 +45,7 @@ class transform():
     def get_tf(self, text):
 
         tf_vectorizer = CountVectorizer(
-            max_df=self.max_df, min_df=self.min_df, max_features=self.num_features, stop_words=self.stop_words
+            max_df=self.max_df, min_df=self.min_df, max_features=self.num_features, 
+            stop_words=self.stop_words
         )
         self.tf = tf_vectorizer.fit_transform(text)
