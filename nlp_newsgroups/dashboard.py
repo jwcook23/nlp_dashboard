@@ -1,3 +1,5 @@
+# bokeh serve --show nlp_newsgroups/dashboard.py
+
 from bokeh.plotting import curdoc, output_file, show
 from bokeh.layouts import row, column
 
@@ -5,16 +7,16 @@ from nlp_newsgroups.plot import plot
 
 class dashboard(plot):
 
-    def __init__(self, server=True):
+    def __init__(self, server=True, standalone=False):
 
         plot.__init__(self)
 
         self.generate_layout()
 
         if server:
-            document = curdoc()
-            document.add_root(self.layout)
-        else:
+            doc = curdoc()
+            doc.add_root(self.layout)
+        elif standalone:
             output_file('dashboard.html')
             show(self.layout)
 
@@ -24,8 +26,12 @@ class dashboard(plot):
         
         self.layout = column(
             self.title_main,
+            self.sample_document,
             self.figure_ngram
         )
+
+
+print(__name__)
 
 
 if __name__.startswith('bokeh_app'):

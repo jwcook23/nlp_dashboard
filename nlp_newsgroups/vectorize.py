@@ -19,18 +19,16 @@ class vectorize():
             stop_words=self.stop_words, ngram_range=ngram_range
         )
 
-        matrix = vectorizer.fit_transform(text)
+        self.features_ngram = vectorizer.fit_transform(text)
 
         terms = np.array(vectorizer.get_feature_names_out())
 
-        ngram = pd.DataFrame({
+        self.summary_ngram = pd.DataFrame({
             'terms': terms,
-            'term_count': np.asarray(matrix.sum(axis=0)).ravel(),
-            'document_count': np.asarray((matrix>0).sum(axis=0)).ravel()
+            'term_count': np.asarray(self.features_ngram.sum(axis=0)).ravel(),
+            'document_count': np.asarray((self.features_ngram>0).sum(axis=0)).ravel()
         })
-        ngram = ngram.sort_values('term_count', ascending=False)
-
-        return ngram
+        self.summary_ngram = self.summary_ngram.sort_values('term_count', ascending=False)
 
 
     def get_tfidf(self, text):
