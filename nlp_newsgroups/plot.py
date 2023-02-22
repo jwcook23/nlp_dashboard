@@ -24,17 +24,29 @@ class plot(data, vectorize):
             styles={'font-size': '150%', 'font-weight': 'bold'}, width=400
         )
 
+    def default_samples(self):
+
+        self.sample_title.text ='Example Documents'
+        self.sample_subtitle.text = 'make a selection to display examples'
+        self.sample_document.text = ''
+        self.sample_number.value = 0
+        self.sample_number.end = 1
+        self.sample_text = None
+
 
     def get_samples(self):
 
-        self.sample_title = Div(text='Example Documents', styles={'font-weight': 'bold'})
-        self.sample_subtitle = Div(text='make a selection to display examples')
+        self.sample_title = Div(text='', styles={'font-weight': 'bold'})
+        self.sample_subtitle = Div(text='')
+
         self.sample_document = Div(
-            text='', width=400, height=200
+            text='', width=1200, height=100
         )
 
-        self.sample_number = Slider(start=0, end=1, value=0, step=1, title="Document Sample Number", width=150)
+        self.sample_number = Slider(start=0, end=1, value=0, step=1, title="Document Sample #", width=150)
         self.sample_number.on_change('value_throttled', self.selected_sample)
+
+        self.default_samples()
 
 
     def set_samples(self, sample_title, sample_subtitle, text):
@@ -48,10 +60,15 @@ class plot(data, vectorize):
 
     def selected_sample(self, attr, old, new):
 
-        self.sample_document.text = self.sample_text.iloc[new]
+        if self.sample_text is not None:
+            self.sample_document.text = self.sample_text.iloc[new]
 
 
     def selected_ngram(self, attr, old, new):
+
+        if len(new) == 0:
+            self.default_samples()
+            return
 
         sample_title = self.figure_ngram.title.text
         terms = self.source_ngram.data['y'].iloc[new]
@@ -71,7 +88,7 @@ class plot(data, vectorize):
         ngram = self.summary_ngram.head(25).sort_values(by='term_count')
 
         self.figure_ngram = figure(
-            y_range=ngram['terms'], height=500, width=300, toolbar_location=None, tools="tap", 
+            y_range=ngram['terms'], height=450, width=300, toolbar_location=None, tools="tap", 
             title="One & Two Word Term Counts", x_axis_label='Term Count', y_axis_label='Term'
 
         )

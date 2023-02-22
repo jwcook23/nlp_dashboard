@@ -8,7 +8,7 @@ class vectorize():
 
         self.max_df = 0.95
         self.min_df = 2
-        self.stop_words = 'english'
+        self.stop_words = list(ENGLISH_STOP_WORDS)
         self.num_features = 1000
 
     
