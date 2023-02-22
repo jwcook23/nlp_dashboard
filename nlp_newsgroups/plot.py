@@ -1,5 +1,6 @@
 from bokeh.plotting import figure
-from bokeh.models import Div, ColumnDataSource, Slider
+from bokeh.models import Div, ColumnDataSource, Slider, ColorBar
+from bokeh.transform import linear_cmap
 
 from nlp_newsgroups.data import data
 from nlp_newsgroups.vectorize import vectorize
@@ -70,15 +71,26 @@ class plot(data, vectorize):
         ngram = self.summary_ngram.head(25).sort_values(by='term_count')
 
         self.figure_ngram = figure(
-            y_range=ngram['terms'], height=300, title="One & Two Word Term Counts",
-            toolbar_location=None, tools="tap", name='figure_ngram'
+            y_range=ngram['terms'], height=500, width=300, toolbar_location=None, tools="tap", 
+            title="One & Two Word Term Counts", x_axis_label='Term Count', y_axis_label='Term'
+
         )
 
         self.source_ngram = ColumnDataSource(data=dict({
             'y': ngram['terms'],
-            'right': ngram['term_count']
+            'right': ngram['term_count'],
+            'color': ngram['document_count']
         }))
 
-        self.figure_ngram.hbar(source=self.source_ngram, width=0.9)
+        cmap = linear_cmap(
+            field_name='color', palette='Turbo256', 
+            low=min(ngram['document_count']), high=max(ngram['document_count'])
+        )
+        color_bar = ColorBar(color_mapper=cmap['transform'], title='Document Count')
+
+        self.figure_ngram.hbar(
+            source=self.source_ngram, width=0.9, fill_color=cmap, line_color=None
+        )
+        self.figure_ngram.add_layout(color_bar, 'above')   
 
         self.source_ngram.selected.on_change('indices', self.selected_ngram)
