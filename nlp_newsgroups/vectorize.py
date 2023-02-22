@@ -21,7 +21,7 @@ class vectorize():
 
         self.features_ngram = vectorizer.fit_transform(text)
 
-        terms = np.array(vectorizer.get_feature_names_out())
+        terms = pd.Series(vectorizer.get_feature_names_out())
 
         self.summary_ngram = pd.DataFrame({
             'terms': terms,

@@ -17,24 +17,23 @@ class dashboard(plot):
             doc = curdoc()
             doc.add_root(self.layout)
         elif standalone:
-            output_file('dashboard.html')
+            output_file('tests/dashboard.html')
             show(self.layout)
 
         
 
     def generate_layout(self):
         
-        self.layout = column(
-            self.title_main,
-            self.sample_document,
-            self.figure_ngram
+        self.layout = row(
+            column(self.title_main,self.figure_ngram),
+            column(
+                row(column(self.sample_title, self.sample_subtitle), self.sample_number),
+                self.sample_document
+            )
         )
-
-
-print(__name__)
 
 
 if __name__.startswith('bokeh_app'):
     page = dashboard()
 elif __name__=='__main__':
-    page = dashboard(server=False)
+    page = dashboard(server=False, standalone=True)
