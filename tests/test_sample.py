@@ -19,7 +19,7 @@ def db(request):
 @pytest.mark.parametrize('db', [('ngram')], indirect=True)
 def test_ngram(db):
 
-    db.selected_ngram(attr=None, old=None, new=[0])
+    db.selected_ngram(attr=None, old=None, new=[1])
 
 
 @pytest.mark.parametrize('db', [('topic_lda')], indirect=True)

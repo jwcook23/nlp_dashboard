@@ -11,93 +11,105 @@ class model():
 
     def __init__(self):
 
-        self.max_df = 0.95
-        self.min_df = 2
-        self.stop_words = list(ENGLISH_STOP_WORDS)
-        self.num_features = 1000
-
-        self.topic_num = 5
-        self.nmf_init = "nndsvda"
-        self.nmnmf_batch_size = 128
+        self.model_params = {
+            'max_df': 0.95,
+            'min_df': 2,
+            'stop_words': list(ENGLISH_STOP_WORDS),
+            'num_features': 1000,
+            'ngram_range': (1,2),
+            'topic_num': 5,
+            'topic_approach': 'lda',
+            'nmf_init': "nndsvda",
+            'nmnmf_batch_size': 128
+        }
 
 
     @performance.timing
-    def get_ngram(self, text, ngram_range):
+    def get_ngram(self, text):
 
-        self.ngram_vectorizer = CountVectorizer(
-            max_df=self.max_df, min_df=self.min_df, max_features=self.num_features, 
-            stop_words=self.stop_words, ngram_range=ngram_range
+        self.ngram = {}
+
+        self.ngram['vectorizer'] = CountVectorizer(
+            max_df=self.model_params['max_df'], min_df=self.model_params['min_df'], max_features=self.model_params['num_features'], 
+            stop_words=self.model_params['stop_words'], ngram_range=self.model_params['ngram_range']
         )
 
-        self.ngram_features = self.ngram_vectorizer.fit_transform(text)
+        self.ngram['features'] = self.ngram['vectorizer'].fit_transform(text)
 
-        self.ngram_terms = pd.Series(self.ngram_vectorizer.get_feature_names_out())
+        # TODO: is devectorized useful?
+        self.ngram['devectorized'] = self.ngram['vectorizer'].inverse_transform(self.ngram['features'])
 
-        self.summary_ngram = pd.DataFrame({
-            'terms': self.ngram_terms,
-            'term_count': np.asarray(self.ngram_features.sum(axis=0)).ravel(),
-            'document_count': np.asarray((self.ngram_features>0).sum(axis=0)).ravel()
+        self.ngram['terms'] = pd.Series(self.ngram['vectorizer'].get_feature_names_out())
+
+        self.ngram['summary'] = pd.DataFrame({
+            'terms': self.ngram['terms'],
+            'term_count': np.asarray(self.ngram['features'].sum(axis=0)).ravel(),
+            'document_count': np.asarray((self.ngram['features']>0).sum(axis=0)).ravel()
         })
-        self.summary_ngram = self.summary_ngram.sort_values('term_count', ascending=False)
+        self.ngram['summary'] = self.ngram['summary'].sort_values('term_count', ascending=False)
 
 
     @performance.timing
-    def get_topics(self, text, approach:Literal['nmf', 'mbnmf', 'lda'] = 'lda'):
+    def get_topics(self, text):
 
-        self.topic_approach = approach
+        self.topic = {}
 
-        if self.topic_approach in ['nmf', 'mbnmf']:
+        if self.model_params['topic_approach'] in ['nmf', 'mbnmf']:
             vectorizer = 'tfidf'
         else:
             vectorizer = 'tf'
         self.get_topic_vectorizer(text, vectorizer)
 
-        if self.topic_approach == 'nmf':
-            self.topic_model = NMF(
-                n_components=self.topic_num, random_state=1, init=self.nmf_init, beta_loss="frobenius",
+        if self.model_params['topic_approach'] == 'nmf':
+            self.topic['model'] = NMF(
+                n_components=self.model_params['topic_num'], random_state=1, init=self.model_params['nmf_init'], beta_loss="frobenius",
                 alpha_W=0.00005, alpha_H=0.00005, l1_ratio=1
-            ).fit(self.topic_features)
+            ).fit(self.topic['features'])
 
-        elif self.topic_approach == 'mbnmf':
-            self.topic_model = MiniBatchNMF(
-                n_components=self.topic_num, random_state=1, init=self.nmf_init, beta_loss="frobenius",
-                alpha_W=0.00005, alpha_H=0.00005, l1_ratio=0.5, batch_size=self.nmnmf_batch_size
-            ).fit(self.topic_features)
+        elif self.model_params['topic_approach'] == 'mbnmf':
+            self.topic['model'] = MiniBatchNMF(
+                n_components=self.model_params['topic_num'], random_state=1, init=self.model_params['nmf_init'], beta_loss="frobenius",
+                alpha_W=0.00005, alpha_H=0.00005, l1_ratio=0.5, batch_size=self.model_params['nmnmf_batch_size']
+            ).fit(self.topic['features'])
 
-        elif self.topic_approach == 'lda':
-            self.topic_model = LatentDirichletAllocation(
-                n_components=self.topic_num, max_iter=5, learning_method="online",
+        elif self.model_params['topic_approach'] == 'lda':
+            self.topic['model'] = LatentDirichletAllocation(
+                n_components=self.model_params['topic_num'], max_iter=5, learning_method="online",
                 learning_offset=50.0, random_state=0,
-            ).fit(self.topic_features)
+            ).fit(self.topic['features'])
 
-        self.summary_topic = pd.DataFrame()
-        for topic_num, topic_weight in enumerate(self.topic_model.components_):
+        self.topic['summary'] = pd.DataFrame()
+        for topic_num, topic_weight in enumerate(self.topic['model'].components_):
             
             summary = pd.DataFrame({
-                'Topic': [topic_num]*self.num_features,
-                'Term': self.topic_terms,
+                'Topic': [topic_num]*self.model_params['num_features'],
+                'Term': self.topic['terms'],
                 'Weight': topic_weight
             })
             summary = summary.sort_values('Weight', ascending=False)
             summary['Rank'] = range(0,len(summary))
 
-            self.summary_topic = pd.concat([self.summary_topic, summary])
+            self.topic['summary'] = pd.concat([self.topic['summary'], summary])
 
 
     @performance.timing
     def get_topic_vectorizer(self, text, vectorizer):
 
         if vectorizer == 'tfidf':
-            self.topic_vectorizer = TfidfVectorizer(
-                max_df=self.max_df, min_df=self.min_df, max_features=self.num_features, 
-                stop_words=self.stop_words
+            self.topic['vectorizer'] = TfidfVectorizer(
+                max_df=self.model_params['max_df'], min_df=self.model_params['min_df'], max_features=self.model_params['num_features'], 
+                stop_words=self.model_params['stop_words']
             )
         elif vectorizer == 'tf':
-            self.topic_vectorizer = CountVectorizer(
-                max_df=self.max_df, min_df=self.min_df, max_features=self.num_features, 
-                stop_words=self.stop_words
+            self.topic['vectorizer'] = CountVectorizer(
+                max_df=self.model_params['max_df'], min_df=self.model_params['min_df'], max_features=self.model_params['num_features'], 
+                stop_words=self.model_params['stop_words']
             )    
 
-        self.topic_features = self.topic_vectorizer.fit_transform(text)
+        self.topic['features'] = self.topic['vectorizer'].fit_transform(text)
 
-        self.topic_terms = pd.Series(self.topic_vectorizer.get_feature_names_out())
+        # TODO: is devectorized useful?
+        self.topic['devectorized'] = self.topic['vectorizer'].inverse_transform(self.topic['features'])
+
+        self.topic['terms'] = pd.Series(self.topic['vectorizer'].get_feature_names_out())
+        

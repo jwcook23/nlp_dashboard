@@ -1,3 +1,8 @@
+import re
+from operator import itemgetter
+import os
+import pickle
+
 from bokeh.plotting import figure
 from bokeh.models import Div, ColumnDataSource, Slider, ColorBar
 from bokeh.transform import linear_cmap, factor_cmap
@@ -13,12 +18,28 @@ class plot(data, model):
     def __init__(self):
 
         data.__init__(self)
-        model.__init__(self)
+
+        self.model_cache()
 
         self.plot_titles()
         self.plot_samples()
         self.plot_ngram()
         self.plot_topics()
+
+
+    def model_cache(self):
+
+        file_name = 'model.pkl'
+        if os.path.isfile(file_name):
+            with open('model.pkl', 'rb') as _fh:
+                self.model_params, self.ngram, self.topic = pickle.load(_fh)
+        else:
+            model.__init__(self)
+            self.get_ngram(self.data_all['text'])
+            self.get_topics(self.data_all['text'])
+            
+            with open('model.pkl', 'wb') as _fh:
+                pickle.dump([self.model_params, self.ngram, self.topic], _fh)
 
 
     def plot_titles(self):
@@ -53,23 +74,38 @@ class plot(data, model):
         self.default_samples()
 
 
-    def set_samples(self, sample_title, sample_subtitle, terms, features):
+    def set_samples(self, sample_title, sample_subtitle, terms, features, devectorized):
 
-        # TODO: highlight terms
         idx = features[:, terms.index].nonzero()[0]
         text = self.data_all.loc[idx,'text']
+        devectorized = itemgetter(*idx)(devectorized)
+
+        # highlight matching term in bold and underline
+        pattern = '|'.join('('+terms+')')
+        highlight = r'<u><strong>\1</strong></u>'
+        text = text.str.replace(pattern, highlight, flags=re.IGNORECASE, regex=True)
 
         self.sample_title.text = f'Example Documents: {sample_title}'
         self.sample_subtitle.text = sample_subtitle
         self.sample_number.end = len(text)-1
         self.sample_text = text
+        self.sample_devectorized = devectorized
         self.selected_sample(None, None, 0)
 
 
     def selected_sample(self, attr, old, new):
 
         if self.sample_text is not None:
-            self.sample_document.text = self.sample_text.iloc[new]
+
+            text = self.sample_text.iloc[new]
+
+            # TODO: highlight features
+            # pattern = ['('+term+')' for term in self.sample_devectorized[new]]
+            # pattern = '|'.join(pattern)
+            # bold = r'<strong>\1</strong>'
+            # text = re.sub(pattern, bold, text, re.IGNORECASE)
+
+            self.sample_document.text = text
 
 
     def selected_ngram(self, attr, old, new):
@@ -82,13 +118,12 @@ class plot(data, model):
         terms = self.source_ngram.data['y'].iloc[new]
         sample_subtitle = 'terms: '+','.join(terms.tolist())
 
-        self.set_samples(sample_title, sample_subtitle, terms, self.ngram_features)
+        self.set_samples(sample_title, sample_subtitle, terms, self.ngram['features'], self.ngram['devectorized'])
 
 
-    def plot_ngram(self, top_num=25, ngram_range=(1,2)):
+    def plot_ngram(self, top_num=25):
 
-        self.get_ngram(self.data_all['text'], ngram_range=ngram_range)
-        ngram = self.summary_ngram.head(top_num).sort_values(by='term_count')
+        ngram = self.ngram['summary'].head(top_num).sort_values(by='term_count')
 
         self.figure_ngram = figure(
             y_range=ngram['terms'], height=500, width=400, toolbar_location=None, tools="tap", 
@@ -124,16 +159,15 @@ class plot(data, model):
 
         sample_title = self.figure_topics.title.text
         terms = self.source_topics.data['Term'].iloc[new]
+        terms = self.topic['terms'][self.topic['terms'].isin(terms)]
         sample_subtitle = 'terms: '+','.join(terms.tolist())
 
-        self.set_samples(sample_title, sample_subtitle, terms, self.topic_features)
+        self.set_samples(sample_title, sample_subtitle, terms, self.topic['features'], self.topic['devectorized'])
 
 
     def plot_topics(self, top_num=10):
-
-        self.get_topics(self.data_all['text'], 'lda')
         
-        topics_combined = self.summary_topic[self.summary_topic['Rank']<top_num].copy()
+        topics_combined = self.topic['summary'][self.topic['summary']['Rank']<top_num].copy()
         topics_combined['Topic'] = 'Topic '+topics_combined['Topic'].astype('str')
 
         topics_combined = topics_combined.sort_values(by='Weight')
