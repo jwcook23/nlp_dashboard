@@ -1,7 +1,8 @@
 # bokeh serve --show nlp_newsgroups/dashboard.py
 
-# https://towardsdatascience.com/nlp-part-3-exploratory-data-analysis-of-text-data-1caa8ab3f79d
 # https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html#sphx-glr-auto-examples-text-plot-document-classification-20newsgroups-py
+
+# TODO: save vectorizers and models (options to load different versions)
 
 from bokeh.plotting import curdoc, output_file, show
 from bokeh.layouts import row, column
@@ -26,10 +27,13 @@ class dashboard(plot):
         
 
     def generate_layout(self):
-        
+
         self.layout = column(
             self.title_main,
-            self.figure_ngram,
+            row(
+                self.figure_ngram,
+                self.figure_topics
+            ),
             column(column(self.sample_title, row(self.sample_number, self.sample_subtitle)),self.sample_document)
         )
 

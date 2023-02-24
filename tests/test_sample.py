@@ -22,6 +22,10 @@ def test_ngram(db):
     db.selected_ngram(attr=None, old=None, new=[0])
 
 
+@pytest.mark.parametrize('db', [('topic_lda')], indirect=True)
+def test_topic_lda(db):
+
+    db.selected_topic(attr=None, old=None, new=[0])
 
 # import subprocess
 # from pathlib import Path
