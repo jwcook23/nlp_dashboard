@@ -2,8 +2,6 @@
 
 # https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html#sphx-glr-auto-examples-text-plot-document-classification-20newsgroups-py
 
-# TODO: save vectorizers and models (options to load different versions)
-
 from bokeh.plotting import curdoc, output_file, show
 from bokeh.layouts import row, column
 

@@ -29,6 +29,7 @@ class plot(data, model):
 
     def model_cache(self):
 
+        # TODO: option to clear model cache
         file_name = 'model.pkl'
         if os.path.isfile(file_name):
             with open('model.pkl', 'rb') as _fh:
@@ -81,9 +82,9 @@ class plot(data, model):
         devectorized = itemgetter(*idx)(devectorized)
 
         # highlight matching term in bold and underline
-        pattern = '|'.join('('+terms+')')
-        highlight = r'<u><strong>\1</strong></u>'
-        text = text.str.replace(pattern, highlight, flags=re.IGNORECASE, regex=True)
+        pattern = '|'.join(terms)
+        highlight = r'<u><strong>\g<0></strong></u>'
+        text = text.str.replace(rf'(?i)(?:{pattern})', highlight, flags=re.IGNORECASE, regex=True)
 
         self.sample_title.text = f'Example Documents: {sample_title}'
         self.sample_subtitle.text = sample_subtitle
@@ -99,11 +100,9 @@ class plot(data, model):
 
             text = self.sample_text.iloc[new]
 
-            # TODO: highlight features
-            # pattern = ['('+term+')' for term in self.sample_devectorized[new]]
-            # pattern = '|'.join(pattern)
-            # bold = r'<strong>\1</strong>'
-            # text = re.sub(pattern, bold, text, re.IGNORECASE)
+            # TODO: highlight features, or remove sample_devectorized
+            pattern = '|'.join(self.sample_devectorized[new])
+            text = re.sub(rf'(?i)(?:{pattern})', r'<strong>\g<0></strong>', text, re.IGNORECASE)
 
             self.sample_document.text = text
 
