@@ -1,5 +1,6 @@
 # bokeh serve --show nlp_newsgroups/dashboard.py
 
+# https://medium.com/plotly/nlp-visualisations-for-clear-immediate-insights-into-text-data-and-outputs-9ebfab168d5b
 # https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html#sphx-glr-auto-examples-text-plot-document-classification-20newsgroups-py
 
 from bokeh.plotting import curdoc, output_file, show
@@ -27,10 +28,10 @@ class dashboard(plot):
     def generate_layout(self):
 
         self.layout = column(
-            self.title_main,
+            row(self.title_main, self.input_reset),
             row(
-                self.figure_ngram,
-                self.figure_topics
+                self.figure['ngram'],
+                self.figure['topics']
             ),
             column(column(self.sample_title, row(self.sample_number, self.sample_subtitle)),self.sample_document)
         )

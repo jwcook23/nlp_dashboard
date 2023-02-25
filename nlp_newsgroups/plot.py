@@ -4,7 +4,7 @@ import os
 import pickle
 
 from bokeh.plotting import figure
-from bokeh.models import Div, ColumnDataSource, Slider, ColorBar
+from bokeh.models import Div, ColumnDataSource, Slider, ColorBar, Button
 from bokeh.transform import linear_cmap, factor_cmap
 import pandas as pd
 from squarify import normalize_sizes, squarify
@@ -21,7 +21,11 @@ class plot(data, model):
 
         self.model_cache()
 
+        self.source = {}
+        self.figure = {}
+
         self.plot_titles()
+        self.reset_button()
         self.plot_samples()
         self.plot_ngram()
         self.plot_topics()
@@ -50,6 +54,19 @@ class plot(data, model):
             styles={'font-size': '150%', 'font-weight': 'bold'}, width=400
         )
 
+
+    def selected_reset(self, event):
+
+        self.default_samples()
+        self.default_selections()
+
+
+    def reset_button(self):
+
+        self.input_reset = Button(label="Reset Selections", button_type="success")
+        self.input_reset.on_event("button_click", self.selected_reset)
+
+
     def default_samples(self):
 
         self.sample_title.text ='Example Documents'
@@ -58,6 +75,16 @@ class plot(data, model):
         self.sample_number.value = 0
         self.sample_number.end = 1
         self.sample_text = None
+
+
+    def default_selections(self, ignore=None):
+
+        reset = list(self.source.keys())
+        if ignore is not None:
+            reset.remove(ignore)
+
+        for source in reset:
+            self.source[source].selected.indices = []
 
 
     def plot_samples(self):
@@ -112,9 +139,11 @@ class plot(data, model):
         if len(new) == 0:
             self.default_samples()
             return
+        
+        self.default_selections(ignore='ngram')
 
-        sample_title = self.figure_ngram.title.text
-        terms = self.source_ngram.data['y'].iloc[new]
+        sample_title = self.figure['ngram'].title.text
+        terms = self.source['ngram'].data['y'].iloc[new]
         sample_subtitle = 'terms: '+','.join(terms.tolist())
 
         self.set_samples(sample_title, sample_subtitle, terms, self.ngram['features'], self.ngram['devectorized'])
@@ -124,13 +153,13 @@ class plot(data, model):
 
         ngram = self.ngram['summary'].head(top_num).sort_values(by='term_count')
 
-        self.figure_ngram = figure(
+        self.figure['ngram'] = figure(
             y_range=ngram['terms'], height=500, width=400, toolbar_location=None, tools="tap", 
             title="One & Two Word Term Counts", x_axis_label='Term Count', y_axis_label='Term'
 
         )
 
-        self.source_ngram = ColumnDataSource(data=dict({
+        self.source['ngram'] = ColumnDataSource(data=dict({
             'y': ngram['terms'],
             'right': ngram['term_count'],
             'color': ngram['document_count']
@@ -142,12 +171,12 @@ class plot(data, model):
         )
         color_bar = ColorBar(color_mapper=cmap['transform'], title='Document Count')
 
-        self.figure_ngram.hbar(
-            source=self.source_ngram, width=0.9, fill_color=cmap, line_color=None
+        self.figure['ngram'].hbar(
+            source=self.source['ngram'], width=0.9, fill_color=cmap, line_color=None
         )
-        self.figure_ngram.add_layout(color_bar, 'above')   
+        self.figure['ngram'].add_layout(color_bar, 'above')   
 
-        self.source_ngram.selected.on_change('indices', self.selected_ngram)
+        self.source['ngram'].selected.on_change('indices', self.selected_ngram)
 
 
     def selected_topic(self, attr, old, new):
@@ -155,9 +184,11 @@ class plot(data, model):
         if len(new) == 0:
             self.default_samples()
             return
+        
+        self.default_selections(ignore='topics')
 
-        sample_title = self.figure_topics.title.text
-        terms = self.source_topics.data['Term'].iloc[new]
+        sample_title = self.figure['topics'].title.text
+        terms = self.source['topics'].data['Term'].iloc[new]
         terms = self.topic['terms'][self.topic['terms'].isin(terms)]
         sample_subtitle = 'terms: '+','.join(terms.tolist())
 
@@ -183,38 +214,38 @@ class plot(data, model):
         height = 450
         topics_rollup = treemap(topics_rollup, "Weight", 0, 0, width, height)
 
-        self.source_topics = pd.DataFrame()
+        self.source['topics'] = pd.DataFrame()
         for _, (Topic, _, _, x, y, dx, dy) in topics_rollup.iterrows():
             df = topics_combined[topics_combined.Topic==Topic]
-            self.source_topics = pd.concat([
-                self.source_topics,
+            self.source['topics'] = pd.concat([
+                self.source['topics'],
                 treemap(df, "Weight", x, y, dx, dy, N=10)
             ])
 
-        self.source_topics["ytop"] = self.source_topics['y'] + self.source_topics['dy']
-        self.source_topics = self.source_topics.to_dict(orient='series')
-        self.source_topics = ColumnDataSource(data=self.source_topics)
+        self.source['topics']["ytop"] = self.source['topics']['y'] + self.source['topics']['dy']
+        self.source['topics'] = self.source['topics'].to_dict(orient='series')
+        self.source['topics'] = ColumnDataSource(data=self.source['topics'])
 
-        self.figure_topics = figure(
+        self.figure['topics'] = figure(
             width=width, height=height, tooltips="@Term", toolbar_location=None, tools="tap",
             x_axis_location=None, y_axis_location=None, title='Document Topics'
         )
-        self.figure_topics.x_range.range_padding = self.figure_topics.y_range.range_padding = 0
-        self.figure_topics.grid.grid_line_color = None
+        self.figure['topics'].x_range.range_padding = self.figure['topics'].y_range.range_padding = 0
+        self.figure['topics'].grid.grid_line_color = None
 
         fill_color = factor_cmap("Topic", "MediumContrast5", topics_combined['Topic'].drop_duplicates())
-        self.figure_topics.block(
-            'x', 'y', 'dx', 'dy', source=self.source_topics, line_width=1, line_color="white",
+        self.figure['topics'].block(
+            'x', 'y', 'dx', 'dy', source=self.source['topics'], line_width=1, line_color="white",
             fill_alpha=0.8, fill_color=fill_color
         )
 
-        self.figure_topics.text(
+        self.figure['topics'].text(
             'x', 'y', x_offset=2, text="Topic", source=topics_rollup,
             text_font_size="18pt", text_color="white"
         )
 
-        self.figure_topics.text('x', 'ytop', x_offset=2, y_offset=2, text="Term", source=self.source_topics,
+        self.figure['topics'].text('x', 'ytop', x_offset=2, y_offset=2, text="Term", source=self.source['topics'],
             text_font_size="6pt", text_baseline="top",
         )
 
-        self.source_topics.selected.on_change('indices', self.selected_topic)
+        self.source['topics'].selected.on_change('indices', self.selected_topic)
