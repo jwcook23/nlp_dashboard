@@ -108,15 +108,11 @@ class plot(data, model):
         text = self.data_all.loc[idx,'text']
         devectorized = itemgetter(*idx)(devectorized)
 
-        # highlight matching term in bold and underline
-        pattern = '|'.join(terms)
-        highlight = r'<u><strong>\g<0></strong></u>'
-        text = text.str.replace(rf'(?i)(?:{pattern})', highlight, flags=re.IGNORECASE, regex=True)
-
         self.sample_title.text = f'Example Documents: {sample_title}'
-        self.sample_subtitle.text = sample_subtitle
+        self.sample_subtitle.text = f'Total Documents = {len(text)}<br>{sample_subtitle}'
         self.sample_number.end = len(text)-1
         self.sample_text = text
+        self.sample_terms = terms
         self.sample_devectorized = devectorized
         self.selected_sample(None, None, 0)
 
@@ -127,9 +123,31 @@ class plot(data, model):
 
             text = self.sample_text.iloc[new]
 
-            # TODO: highlight features, or remove sample_devectorized
-            pattern = '|'.join(self.sample_devectorized[new])
-            text = re.sub(rf'(?i)(?:{pattern})', r'<strong>\g<0></strong>', text, re.IGNORECASE)
+            pattern = self.model_params['token_pattern']
+            pattern = '[^'+pattern+']'
+            tokens = re.sub(pattern, ' ', text)
+
+            # matching terms: bold and underline
+            pattern = self.sample_terms
+            pattern = pattern.str.replace(' ', r'\s+', regex=True)
+            pattern = '|'.join(r'\b'+pattern+r'\b')
+            highlight_terms = re.finditer(pattern, tokens, flags=re.IGNORECASE)
+
+            # feature terms: bold
+            pattern = pd.Series(self.sample_devectorized[new])
+            pattern = pattern[~pattern.isin(self.sample_terms)]
+            pattern = pattern.str.replace(' ', r'\s+', regex=True)
+            pattern = '|'.join(r'\b'+pattern+r'\b')
+            bold_features = re.finditer(pattern, tokens, flags=re.IGNORECASE)
+
+            text = list(text)
+            for match in highlight_terms:
+                text[match.start()] = f'<font size="4"><strong><u>{text[match.start()]}'
+                text[match.end()] = f'{text[match.end()]}</font></u></strong>'
+            for match in bold_features:
+                text[match.start()] = f'<font size="4"><strong>{text[match.start()]}'
+                text[match.end()] = f'{text[match.end()]}</font></strong>'
+            text = ''.join(text)
 
             self.sample_document.text = text
 
@@ -151,7 +169,8 @@ class plot(data, model):
 
     def plot_ngram(self, top_num=25):
 
-        ngram = self.ngram['summary'].head(top_num).sort_values(by='term_count')
+        ngram = self.ngram['summary'].head(top_num)
+        # .sort_values(by='term_count')
 
         self.figure['ngram'] = figure(
             y_range=ngram['terms'], height=500, width=400, toolbar_location=None, tools="tap", 

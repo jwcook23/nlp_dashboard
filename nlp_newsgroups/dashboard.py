@@ -1,7 +1,9 @@
 # bokeh serve --show nlp_newsgroups/dashboard.py
 
 # https://medium.com/plotly/nlp-visualisations-for-clear-immediate-insights-into-text-data-and-outputs-9ebfab168d5b
+# https://towardsdatascience.com/introduction-to-topic-modeling-using-scikit-learn-4c3f3290f5b9
 # https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html#sphx-glr-auto-examples-text-plot-document-classification-20newsgroups-py
+
 
 from bokeh.plotting import curdoc, output_file, show
 from bokeh.layouts import row, column
