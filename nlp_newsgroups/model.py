@@ -1,5 +1,3 @@
-from typing import Literal
-
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer, ENGLISH_STOP_WORDS
 from sklearn.decomposition import NMF, MiniBatchNMF, LatentDirichletAllocation
 import pandas as pd
@@ -90,8 +88,19 @@ class model():
             })
             summary = summary.sort_values('Weight', ascending=False)
             summary['Rank'] = range(0,len(summary))
+            summary['Topic'] = 'Topic '+summary['Topic'].astype('str')
 
             self.topic['summary'] = pd.concat([self.topic['summary'], summary])
+
+        distribution = self.topic['model'].transform(self.topic['features'])
+        distribution = pd.DataFrame.from_records(distribution)
+        distribution.index.name = 'Document'
+        distribution = distribution.melt(var_name='Topic', value_name='Confidence', ignore_index=False)
+        distribution = distribution.sort_values(by=['Topic', 'Confidence'], ascending=[True, False])
+        rank = distribution.groupby('Document')['Topic'].rank(method='max').astype('int64')
+        distribution['Rank'] = rank
+        distribution['Topic'] = 'Topic '+distribution['Topic'].astype('str')
+        self.topic['Distribution'] = distribution
 
 
     @performance.timing

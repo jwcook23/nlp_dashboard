@@ -207,6 +207,15 @@ class plot(data, model):
         self.default_selections(ignore='topics')
 
         sample_title = self.figure['topics'].title.text
+
+        topics = self.source['topics'].data['Topic'].iloc[new]
+        topics = self.topic['Distribution'][
+            (self.topic['Distribution']['Topic'].isin(topics))
+        ].index
+        # 
+        # self.topic['summary'][self.topic['summary']['Topic'].isin(topics)]
+
+
         terms = self.source['topics'].data['Term'].iloc[new]
         terms = self.topic['terms'][self.topic['terms'].isin(terms)]
         sample_subtitle = 'terms: '+','.join(terms.tolist())
@@ -217,7 +226,6 @@ class plot(data, model):
     def plot_topics(self, top_num=10):
         
         topics_combined = self.topic['summary'][self.topic['summary']['Rank']<top_num].copy()
-        topics_combined['Topic'] = 'Topic '+topics_combined['Topic'].astype('str')
 
         topics_combined = topics_combined.sort_values(by='Weight')
         topics_rollup = topics_combined.groupby('Topic').sum('Weight').sort_values(by='Weight')
