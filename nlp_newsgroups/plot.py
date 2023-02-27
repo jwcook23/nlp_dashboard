@@ -102,26 +102,16 @@ class plot(data, model):
         self.default_samples()
 
 
-    def set_samples(self, sample_title, sample_subtitle, features, devectorized, terms=None, topics=None):
+    def set_samples(self, sample_title, sample_subtitle, devectorized, document_idx, highlight_tokens):
 
-        if terms is not None:
-            idx = features[:, terms.index].nonzero()[0]
-            highlight = terms
-        elif topics is not None:
-            idx = topics.index
-            highlight = self.topic['summary'].loc[
-                (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Rank']<10),
-                'Term'
-            ]
-
-        text = self.data_all.loc[idx,'text']
-        devectorized = itemgetter(*idx)(devectorized)
+        text = self.data_all.loc[document_idx,'text']
+        devectorized = itemgetter(*document_idx)(devectorized)
 
         self.sample_title.text = f'Example Documents: {sample_title}'
         self.sample_subtitle.text = f'Total Documents = {len(text)}<br>{sample_subtitle}'
         self.sample_number.end = len(text)-1
         self.sample_text = text
-        self.sample_highlight = highlight
+        self.sample_highlight = highlight_tokens
         self.sample_devectorized = devectorized
         self.selected_sample(None, None, 0)
 
@@ -149,8 +139,8 @@ class plot(data, model):
 
             text = list(text)
             for match in matching_terms:
-                text[match.start()] = f'<font size="5"><strong>{text[match.start()]}'
-                text[match.end()] = f'{text[match.end()]}</font></strong>'
+                text[match.start()] = f'<u><strong>{text[match.start()]}'
+                text[match.end()] = f'{text[match.end()]}</u></strong>'
             for match in matching_features:
                 text[match.start()] = f'<u>{text[match.start()]}'
                 text[match.end()] = f'{text[match.end()]}</u>'
@@ -171,7 +161,10 @@ class plot(data, model):
         terms = self.source['ngram'].data['y'].iloc[new]
         sample_subtitle = 'terms: '+','.join(terms.tolist())
 
-        self.set_samples(sample_title, sample_subtitle, self.ngram['features'], self.ngram['devectorized'], terms=terms)
+        document_idx = self.ngram['features'][:, terms.index].nonzero()[0]
+        highlight_tokens = terms
+
+        self.set_samples(sample_title, sample_subtitle, self.ngram['devectorized'], document_idx, highlight_tokens)
 
 
     def plot_ngram(self, top_num=25):
@@ -222,7 +215,13 @@ class plot(data, model):
 
         sample_subtitle = 'topic: '+','.join(topics_number.tolist())
 
-        self.set_samples(sample_title, sample_subtitle, self.topic['features'], self.topic['devectorized'], topics=topics)
+        document_idx = topics.index
+        highlight_tokens = self.topic['summary'].loc[
+            (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Rank']<10),
+            'Term'
+        ]
+
+        self.set_samples(sample_title, sample_subtitle, self.topic['devectorized'], document_idx, highlight_tokens)
 
 
     def plot_topics(self, top_num=10):
@@ -249,7 +248,7 @@ class plot(data, model):
             self.source['topics'] = pd.concat([
                 self.source['topics'],
                 treemap(df, "Weight", x, y, dx, dy, N=10)
-            ])
+            ], ignore_index=True)
 
         self.source['topics']["ytop"] = self.source['topics']['y'] + self.source['topics']['dy']
         self.source['topics'] = self.source['topics'].to_dict(orient='series')

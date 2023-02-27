@@ -7,6 +7,7 @@
 # TODO: plot distribution of assigned topics
 # TODO: predict new topic
 # TODO: show documents that don't find topics well (add up confidence values)
+# TODO: recalcuate based on parameter changes
 
 from bokeh.plotting import curdoc, output_file, show
 from bokeh.layouts import row, column
