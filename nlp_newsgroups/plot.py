@@ -102,9 +102,18 @@ class plot(data, model):
         self.default_samples()
 
 
-    def set_samples(self, sample_title, sample_subtitle, terms, features, devectorized):
+    def set_samples(self, sample_title, sample_subtitle, features, devectorized, terms=None, topics=None):
 
-        idx = features[:, terms.index].nonzero()[0]
+        if terms is not None:
+            idx = features[:, terms.index].nonzero()[0]
+            highlight = terms
+        elif topics is not None:
+            idx = topics.index
+            highlight = self.topic['summary'].loc[
+                (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Rank']<10),
+                'Term'
+            ]
+
         text = self.data_all.loc[idx,'text']
         devectorized = itemgetter(*idx)(devectorized)
 
@@ -112,7 +121,7 @@ class plot(data, model):
         self.sample_subtitle.text = f'Total Documents = {len(text)}<br>{sample_subtitle}'
         self.sample_number.end = len(text)-1
         self.sample_text = text
-        self.sample_terms = terms
+        self.sample_highlight = highlight
         self.sample_devectorized = devectorized
         self.selected_sample(None, None, 0)
 
@@ -127,26 +136,24 @@ class plot(data, model):
             pattern = '[^'+pattern+']'
             tokens = re.sub(pattern, ' ', text)
 
-            # matching terms: bold and underline
-            pattern = self.sample_terms
+            pattern = self.sample_highlight
             pattern = pattern.str.replace(' ', r'\s+', regex=True)
             pattern = '|'.join(r'\b'+pattern+r'\b')
-            highlight_terms = re.finditer(pattern, tokens, flags=re.IGNORECASE)
+            matching_terms = re.finditer(pattern, tokens, flags=re.IGNORECASE)
 
-            # feature terms: bold
             pattern = pd.Series(self.sample_devectorized[new])
-            pattern = pattern[~pattern.isin(self.sample_terms)]
+            pattern = pattern[~pattern.isin(self.sample_highlight)]
             pattern = pattern.str.replace(' ', r'\s+', regex=True)
             pattern = '|'.join(r'\b'+pattern+r'\b')
-            bold_features = re.finditer(pattern, tokens, flags=re.IGNORECASE)
+            matching_features = re.finditer(pattern, tokens, flags=re.IGNORECASE)
 
             text = list(text)
-            for match in highlight_terms:
-                text[match.start()] = f'<font size="4"><strong><u>{text[match.start()]}'
-                text[match.end()] = f'{text[match.end()]}</font></u></strong>'
-            for match in bold_features:
-                text[match.start()] = f'<font size="4"><strong>{text[match.start()]}'
+            for match in matching_terms:
+                text[match.start()] = f'<font size="5"><strong>{text[match.start()]}'
                 text[match.end()] = f'{text[match.end()]}</font></strong>'
+            for match in matching_features:
+                text[match.start()] = f'<u>{text[match.start()]}'
+                text[match.end()] = f'{text[match.end()]}</u>'
             text = ''.join(text)
 
             self.sample_document.text = text
@@ -164,7 +171,7 @@ class plot(data, model):
         terms = self.source['ngram'].data['y'].iloc[new]
         sample_subtitle = 'terms: '+','.join(terms.tolist())
 
-        self.set_samples(sample_title, sample_subtitle, terms, self.ngram['features'], self.ngram['devectorized'])
+        self.set_samples(sample_title, sample_subtitle, self.ngram['features'], self.ngram['devectorized'], terms=terms)
 
 
     def plot_ngram(self, top_num=25):
@@ -208,19 +215,14 @@ class plot(data, model):
 
         sample_title = self.figure['topics'].title.text
 
-        topics = self.source['topics'].data['Topic'].iloc[new]
+        topics_number = self.source['topics'].data['Topic'].iloc[new]
         topics = self.topic['Distribution'][
-            (self.topic['Distribution']['Topic'].isin(topics))
-        ].index
-        # 
-        # self.topic['summary'][self.topic['summary']['Topic'].isin(topics)]
+            (self.topic['Distribution']['Topic'].isin(topics_number))
+        ]
 
+        sample_subtitle = 'topic: '+','.join(topics_number.tolist())
 
-        terms = self.source['topics'].data['Term'].iloc[new]
-        terms = self.topic['terms'][self.topic['terms'].isin(terms)]
-        sample_subtitle = 'terms: '+','.join(terms.tolist())
-
-        self.set_samples(sample_title, sample_subtitle, terms, self.topic['features'], self.topic['devectorized'])
+        self.set_samples(sample_title, sample_subtitle, self.topic['features'], self.topic['devectorized'], topics=topics)
 
 
     def plot_topics(self, top_num=10):
