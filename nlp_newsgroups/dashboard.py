@@ -4,10 +4,12 @@
 # https://towardsdatascience.com/introduction-to-topic-modeling-using-scikit-learn-4c3f3290f5b9
 # https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html#sphx-glr-auto-examples-text-plot-document-classification-20newsgroups-py
 
-# TODO: plot distribution of assigned topics
-# TODO: predict new topic
-# TODO: show documents that don't find topics well (add up confidence values)
-# TODO: recalcuate based on parameter changes
+# TODO: topic plot diagnostics
+# - distribution of assigned topic confidence
+# - predict new topic
+# - documents that don't fit any topic (add up confidence values)
+
+# TODO: recalcuate based on parameter changes of slicers
 
 from bokeh.plotting import curdoc, output_file, show
 from bokeh.layouts import row, column
@@ -41,7 +43,7 @@ class dashboard(plot):
             ),
             column(
                 row(
-                    column(self.sample_title, row(self.sample_number, self.sample_total, self.input_reset)),
+                    row(column(self.sample_title, self.sample_number), self.input_reset),
                     self.sample_legend
                 ),
                 self.sample_document

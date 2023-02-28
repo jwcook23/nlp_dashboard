@@ -4,7 +4,7 @@ import os
 import pickle
 
 from bokeh.plotting import figure
-from bokeh.models import Div, ColumnDataSource, Slider, ColorBar, Button
+from bokeh.models import Div, ColumnDataSource, Spinner, ColorBar, Button
 from bokeh.transform import linear_cmap, factor_cmap
 import pandas as pd
 from squarify import normalize_sizes, squarify
@@ -70,15 +70,17 @@ class plot(data, model):
     def default_samples(self):
 
         self.sample_title.text ='Example Documents'
-        self.sample_total.text = 'make a selection to display examples'
+        self.sample_number.title = 'Document Sample #: make selection'
         self.sample_legend.text = ''
         self.sample_document.text = ''
         self.sample_number.value = 0
-        self.sample_number.end = 1
+        self.sample_number.high = 1
         self.sample_text = None
 
 
     def default_selections(self, ignore=None):
+
+        self.sample_number.value = 0
 
         reset = list(self.source.keys())
         if ignore is not None:
@@ -90,16 +92,15 @@ class plot(data, model):
 
     def plot_samples(self):
 
-        self.sample_title = Div(text='', styles={'font-weight': 'bold'})
-        self.sample_total = Div(text='')
+        self.sample_title = Div(text='', styles={'font-weight': 'bold'}, width=250)
         self.sample_legend = Div(text='')
 
         self.sample_document = Div(
             text='', width=1400, height=100
         )
 
-        self.sample_number = Slider(start=0, end=1, value=0, step=1, title="Document Sample #", width=150)
-        self.sample_number.on_change('value_throttled', self.selected_sample)
+        self.sample_number = Spinner(low=0, high=1, value=0, step=1, width=100)
+        self.sample_number.on_change('value', self.selected_sample)
 
         self.default_samples()
 
@@ -110,13 +111,13 @@ class plot(data, model):
         devectorized = itemgetter(*document_idx)(devectorized)
 
         self.sample_title.text = f'Example Documents: {sample_title}'
-        self.sample_total.text = f'of {len(text)}'
         self.sample_legend.text = f'<strong>Legend</strong><br>Bold: {sample_legend}<br> Underline: other feature terms'
-        self.sample_number.end = len(text)-1
+        self.sample_number.title = f'Document Sample #: {len(text)} total'
+        self.sample_number.high = len(text)-1
         self.sample_text = text
         self.sample_highlight = highlight_tokens
         self.sample_devectorized = devectorized
-        self.selected_sample(None, None, 0)
+        self.selected_sample(None, None, self.sample_number.value)
 
 
     def selected_sample(self, attr, old, new):
@@ -135,10 +136,13 @@ class plot(data, model):
             matching_terms = re.finditer(pattern, tokens, flags=re.IGNORECASE)
 
             pattern = pd.Series(self.sample_devectorized[new])
-            pattern = pattern[~pattern.isin(self.sample_highlight)]
-            pattern = pattern.str.replace(' ', r'\s+', regex=True)
-            pattern = '|'.join(r'\b'+pattern+r'\b')
-            matching_features = re.finditer(pattern, tokens, flags=re.IGNORECASE)
+            if len(pattern)==0:
+                matching_features = []
+            else:
+                pattern = pattern[~pattern.isin(self.sample_highlight)]
+                pattern = pattern.str.replace(' ', r'\s+', regex=True)
+                pattern = '|'.join(r'\b'+pattern+r'\b')
+                matching_features = re.finditer(pattern, tokens, flags=re.IGNORECASE)
 
             text = list(text)
             for match in matching_terms:
@@ -211,8 +215,9 @@ class plot(data, model):
         sample_title = self.figure['topics'].title.text
 
         topics_number = self.source['topics'].data['Topic'].iloc[new]
+
         topics = self.topic['Distribution'][
-            (self.topic['Distribution']['Topic'].isin(topics_number))
+            (self.topic['Distribution']['Topic'].isin(topics_number)) & (self.topic['Distribution']['Confidence']>0.5)
         ]
 
         limit = 10
