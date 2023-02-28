@@ -111,7 +111,7 @@ class plot(data, model):
 
         self.sample_title.text = f'Example Documents: {sample_title}'
         self.sample_total.text = f'of {len(text)}'
-        self.sample_legend.text = f'Bold: {sample_legend}<br> Underline: other feature terms'
+        self.sample_legend.text = f'<strong>Legend</strong><br>Bold: {sample_legend}<br> Underline: other feature terms'
         self.sample_number.end = len(text)-1
         self.sample_text = text
         self.sample_highlight = highlight_tokens

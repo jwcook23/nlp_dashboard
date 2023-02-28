@@ -34,12 +34,18 @@ class dashboard(plot):
     def generate_layout(self):
 
         self.layout = column(
-            row(self.title_main, self.input_reset),
+            self.title_main,
             row(
                 self.figure['ngram'],
                 self.figure['topics']
             ),
-            column(column(self.sample_title, row(self.sample_number, self.sample_total, self.sample_legend)), self.sample_document)
+            column(
+                row(
+                    column(self.sample_title, row(self.sample_number, self.sample_total, self.input_reset)),
+                    self.sample_legend
+                ),
+                self.sample_document
+            )
         )
 
 if __name__.startswith('bokeh_app'):
