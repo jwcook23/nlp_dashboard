@@ -4,6 +4,10 @@
 # https://towardsdatascience.com/introduction-to-topic-modeling-using-scikit-learn-4c3f3290f5b9
 # https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html#sphx-glr-auto-examples-text-plot-document-classification-20newsgroups-py
 
+# TODO: input custom stopwords and seperate figure like ngram
+
+# TODO: named entity recognition
+
 # TODO: topic plot diagnostics
 # - distribution of assigned topic confidence
 # - predict new topic
@@ -36,7 +40,7 @@ class dashboard(plot):
     def generate_layout(self):
 
         self.layout = column(
-            self.title_main,
+            row(self.title_main, self.new_stopword),
             row(
                 self.figure['ngram'],
                 self.figure['topics']

@@ -19,10 +19,16 @@ def db(request):
 @pytest.mark.parametrize('db', [('ngram')], indirect=True)
 def test_ngram(db):
 
-    db.selected_ngram(attr=None, old=None, new=[1])
+    db.selected_ngram(None, None, new=[1])
 
 
 @pytest.mark.parametrize('db', [('topic_lda')], indirect=True)
 def test_topic_lda(db):
 
-    db.selected_topic(attr=None, old=None, new=[0])
+    db.selected_topic(None, None, new=[0])
+
+
+@pytest.mark.parametrize('db', [('add_stopword')], indirect=True)
+def test_add_stopword(db):
+
+    db.add_stopword(None, None, new='AX')

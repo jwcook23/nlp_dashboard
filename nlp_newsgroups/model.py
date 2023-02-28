@@ -5,21 +5,24 @@ import numpy as np
 
 from nlp_newsgroups import performance
 
+default_stopwords = list(ENGLISH_STOP_WORDS)
+
 class model():
 
-    def __init__(self):
+    def __init__(self, 
+                 token_pattern='(?u)\\b\\w\\w+\\b', max_df=0.95, min_df=2, 
+                 stop_words=default_stopwords, num_features=1000, ngram_range=(1,2), topic_num=5, topic_approach='lda'
+                ):
 
         self.model_params = {
-            'token_pattern': '(?u)\\b\\w\\w+\\b',
-            'max_df': 0.95,
-            'min_df': 2,
-            'stop_words': list(ENGLISH_STOP_WORDS),
-            'num_features': 1000,
-            'ngram_range': (1,2),
-            'topic_num': 5,
-            'topic_approach': 'lda',
-            'nmf_init': "nndsvda",
-            'nmnmf_batch_size': 128
+            'token_pattern': token_pattern,
+            'max_df': max_df,
+            'min_df': min_df,
+            'stop_words': stop_words,
+            'num_features': num_features,
+            'ngram_range': ngram_range,
+            'topic_num': topic_num,
+            'topic_approach': topic_approach
         }
 
 
@@ -59,16 +62,17 @@ class model():
             vectorizer = 'tf'
         self.get_topic_vectorizer(text, vectorizer)
 
+
         if self.model_params['topic_approach'] == 'nmf':
             self.topic['model'] = NMF(
-                n_components=self.model_params['topic_num'], random_state=1, init=self.model_params['nmf_init'], beta_loss="frobenius",
+                n_components=self.model_params['topic_num'], random_state=1, init="nndsvda", beta_loss="frobenius",
                 alpha_W=0.00005, alpha_H=0.00005, l1_ratio=1
             ).fit(self.topic['features'])
 
         elif self.model_params['topic_approach'] == 'mbnmf':
             self.topic['model'] = MiniBatchNMF(
-                n_components=self.model_params['topic_num'], random_state=1, init=self.model_params['nmf_init'], beta_loss="frobenius",
-                alpha_W=0.00005, alpha_H=0.00005, l1_ratio=0.5, batch_size=self.model_params['nmnmf_batch_size']
+                n_components=self.model_params['topic_num'], random_state=1, init="nndsvda", beta_loss="frobenius",
+                alpha_W=0.00005, alpha_H=0.00005, l1_ratio=0.5, batch_size=128
             ).fit(self.topic['features'])
 
         elif self.model_params['topic_approach'] == 'lda':
