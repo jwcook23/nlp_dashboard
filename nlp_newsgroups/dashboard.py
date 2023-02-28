@@ -39,7 +39,7 @@ class dashboard(plot):
                 self.figure['ngram'],
                 self.figure['topics']
             ),
-            column(column(self.sample_title, row(self.sample_number, self.sample_subtitle)),self.sample_document)
+            column(column(self.sample_title, row(self.sample_number, self.sample_total, self.sample_legend)), self.sample_document)
         )
 
 if __name__.startswith('bokeh_app'):

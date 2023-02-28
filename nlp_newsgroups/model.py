@@ -36,7 +36,6 @@ class model():
 
         self.ngram['features'] = self.ngram['vectorizer'].fit_transform(text)
 
-        # TODO: is devectorized useful?
         self.ngram['devectorized'] = self.ngram['vectorizer'].inverse_transform(self.ngram['features'])
 
         self.ngram['terms'] = pd.Series(self.ngram['vectorizer'].get_feature_names_out())
@@ -119,7 +118,6 @@ class model():
 
         self.topic['features'] = self.topic['vectorizer'].fit_transform(text)
 
-        # TODO: is devectorized useful?
         self.topic['devectorized'] = self.topic['vectorizer'].inverse_transform(self.topic['features'])
 
         self.topic['terms'] = pd.Series(self.topic['vectorizer'].get_feature_names_out())

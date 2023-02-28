@@ -70,7 +70,8 @@ class plot(data, model):
     def default_samples(self):
 
         self.sample_title.text ='Example Documents'
-        self.sample_subtitle.text = 'make a selection to display examples'
+        self.sample_total.text = 'make a selection to display examples'
+        self.sample_legend.text = ''
         self.sample_document.text = ''
         self.sample_number.value = 0
         self.sample_number.end = 1
@@ -90,7 +91,8 @@ class plot(data, model):
     def plot_samples(self):
 
         self.sample_title = Div(text='', styles={'font-weight': 'bold'})
-        self.sample_subtitle = Div(text='')
+        self.sample_total = Div(text='')
+        self.sample_legend = Div(text='')
 
         self.sample_document = Div(
             text='', width=1400, height=100
@@ -102,13 +104,14 @@ class plot(data, model):
         self.default_samples()
 
 
-    def set_samples(self, sample_title, sample_subtitle, devectorized, document_idx, highlight_tokens):
+    def set_samples(self, sample_title, sample_legend, devectorized, document_idx, highlight_tokens):
 
         text = self.data_all.loc[document_idx,'text']
         devectorized = itemgetter(*document_idx)(devectorized)
 
         self.sample_title.text = f'Example Documents: {sample_title}'
-        self.sample_subtitle.text = f'Total Documents = {len(text)}<br>{sample_subtitle}'
+        self.sample_total.text = f'of {len(text)}'
+        self.sample_legend.text = f'Bold: {sample_legend}<br> Underline: other feature terms'
         self.sample_number.end = len(text)-1
         self.sample_text = text
         self.sample_highlight = highlight_tokens
@@ -139,8 +142,8 @@ class plot(data, model):
 
             text = list(text)
             for match in matching_terms:
-                text[match.start()] = f'<u><strong>{text[match.start()]}'
-                text[match.end()] = f'{text[match.end()]}</u></strong>'
+                text[match.start()] = f'<text="2"><strong>{text[match.start()]}'
+                text[match.end()] = f'{text[match.end()]}</text></strong>'
             for match in matching_features:
                 text[match.start()] = f'<u>{text[match.start()]}'
                 text[match.end()] = f'{text[match.end()]}</u>'
@@ -159,12 +162,12 @@ class plot(data, model):
 
         sample_title = self.figure['ngram'].title.text
         terms = self.source['ngram'].data['y'].iloc[new]
-        sample_subtitle = 'terms: '+','.join(terms.tolist())
+        sample_legend = f"Terms {','.join(terms.tolist())}"
 
         document_idx = self.ngram['features'][:, terms.index].nonzero()[0]
         highlight_tokens = terms
 
-        self.set_samples(sample_title, sample_subtitle, self.ngram['devectorized'], document_idx, highlight_tokens)
+        self.set_samples(sample_title, sample_legend, self.ngram['devectorized'], document_idx, highlight_tokens)
 
 
     def plot_ngram(self, top_num=25):
@@ -172,7 +175,7 @@ class plot(data, model):
         ngram = self.ngram['summary'].head(top_num)
 
         self.figure['ngram'] = figure(
-            y_range=ngram['terms'], height=500, width=400, toolbar_location=None, tools="tap", 
+            y_range=ngram['terms'], height=500, width=350, toolbar_location=None, tools="tap", 
             title="Term Counts", x_axis_label='Term Count', y_axis_label='Term'
 
         )
@@ -213,15 +216,16 @@ class plot(data, model):
         ]
 
         limit = 10
-        sample_subtitle = f'top {10} terms: '+','.join(topics_number.tolist())
-
+        
         document_idx = topics.index
         highlight_tokens = self.topic['summary'].loc[
             (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Rank']<limit),
             'Term'
         ]
 
-        self.set_samples(sample_title, sample_subtitle, self.topic['devectorized'], document_idx, highlight_tokens)
+        sample_legend = f"{','.join(topics_number.tolist())} top {limit} terms [{', '.join(highlight_tokens.tolist())}]"
+
+        self.set_samples(sample_title, sample_legend, self.topic['devectorized'], document_idx, highlight_tokens)
 
 
     def plot_topics(self, top_num=10):
