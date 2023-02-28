@@ -4,7 +4,10 @@ import os
 import pickle
 
 from bokeh.plotting import figure
-from bokeh.models import Div, ColumnDataSource, Spinner, ColorBar, Button, TextInput, CustomJS
+from bokeh.models import (
+    Div, ColumnDataSource, Spinner, ColorBar, Button, TextInput, CustomJS,
+    Slider, RangeSlider, NumericInput, Select
+)
 from bokeh.transform import linear_cmap, factor_cmap
 import pandas as pd
 from squarify import normalize_sizes, squarify
@@ -61,10 +64,12 @@ class plot(data, model):
 
     def plot_titles(self):
 
-        self.title_main = Div(
-            text='Newsgroups NLP Dashboard',
-            styles={'font-size': '150%', 'font-weight': 'bold'}, width=350
-        )
+        self.title = {
+            'main': Div(text='Newsgroups NLP Dashboard', styles={'font-size': '150%', 'font-weight': 'bold'}, width=275),
+            'ngram': Div(text='Term Counts', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
+            'topics': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
+            'sample': Div(text='', styles={'font-weight': 'bold', 'font-size': '125%'}, width=250)
+        }
 
 
     def default_figures(self):
@@ -124,7 +129,7 @@ class plot(data, model):
         stop_words = self.input_stopword.value.strip().lower()
         if stop_words != "":
             model_params['stop_words'] += [stop_words]
-        self.input_stopword.value = ""        
+        self.inputs['stop_words'].value = ""
 
         self.model_cache(model_params)
 
@@ -142,15 +147,29 @@ class plot(data, model):
 
         self.input_recalculate = Button(label="Recalculate Models", button_type="danger")
         self.input_recalculate.on_event("button_click", self.recalculate_model)
-        code = '{ alert("Recalculating Models! Please be patient."); }'
+        code = '{ alert("Recalculating Models! This may take a few minutes."); }'
         self.input_recalculate.js_on_click(CustomJS(code=code))
 
-        self.input_stopword = TextInput(value="", title="Add Stopword:")
+        # TODO: initialize model with these values, recalcuate if needed
+        self.inputs = {
+            'stop_words': TextInput(value="", title="Add Stopword:", width=125),
+            'max_df': Slider(start=0.75, end=1.0, value=0.95, step=0.05, title='Max Doc. Freq.', width=125),
+            'min_df': Slider(start=1, end=len(self.data_all), value=2, step=1, title='Min Doc. #', width=125),
+            'num_features': NumericInput(value=1000, low=1000, high=10000, title='# Features', width=75),
+            'ngram_range': RangeSlider(start=1, end=3, value=(1,2), step=1, title='N-Gram Range', width=125),
+            'topic_num': Slider(start=2, end=10, value=5, step=1, title='# Topics', width=125),
+            'topic_approach': Select(
+                value="Latent Dirichlet Allocation", 
+                options=["Latent Dirichlet Allocation", "Non-negative Matrix Factorization", "MiniBatch Non-negative Matrix Factorization"],
+                title='Topic Model',
+                width=200
+            )
+        }
 
 
     def default_samples(self):
 
-        self.sample_title.text ='Example Documents'
+        self.title['sample'].text ='Example Documents'
         self.sample_number.title = 'Document Sample #: make selection'
         self.sample_legend.text = ''
         self.sample_document.text = ''
@@ -173,7 +192,6 @@ class plot(data, model):
 
     def plot_samples(self):
 
-        self.sample_title = Div(text='', styles={'font-weight': 'bold'}, width=250)
         self.sample_legend = Div(text='')
 
         self.sample_document = Div(
@@ -191,7 +209,7 @@ class plot(data, model):
         text = self.data_all.loc[document_idx,'text']
         devectorized = itemgetter(*document_idx)(devectorized)
 
-        self.sample_title.text = f'Example Documents: {sample_title}'
+        self.title['sample'].text = f'Example Documents: {sample_title}'
         self.sample_legend.text = f'<strong>Legend</strong><br>Bold: {sample_legend}<br> Underline: other feature terms'
         self.sample_number.title = f'Document Sample #: {len(text)} total'
         self.sample_number.high = len(text)-1
@@ -260,7 +278,7 @@ class plot(data, model):
 
         self.figure['ngram'] = figure(
             height=500, width=350, toolbar_location=None, tools="tap", tooltips="Document Count = @{Document Count}",
-            title="Term Counts", x_axis_label='Term Count', y_axis_label='Term', y_range=[]
+            x_axis_label='Term Count', y_axis_label='Term', y_range=[]
         )
 
         self.source['ngram'] = ColumnDataSource()
@@ -314,7 +332,7 @@ class plot(data, model):
 
         self.figure['topics'] = figure(
             width=600, height=500, tooltips="@Term", toolbar_location=None, tools="tap",
-            x_axis_location=None, y_axis_location=None, title='Document Topics'
+            x_axis_location=None, y_axis_location=None
         )
 
         self.source['topics'] = ColumnDataSource()

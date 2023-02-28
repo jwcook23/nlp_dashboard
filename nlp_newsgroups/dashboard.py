@@ -4,6 +4,8 @@
 # https://towardsdatascience.com/introduction-to-topic-modeling-using-scikit-learn-4c3f3290f5b9
 # https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html#sphx-glr-auto-examples-text-plot-document-classification-20newsgroups-py
 
+# TODO: standard output to div to explain model steps and timing
+
 # TODO: input custom stopwords and seperate figure like ngram
 
 # TODO: named entity recognition
@@ -40,14 +42,17 @@ class dashboard(plot):
     def generate_layout(self):
 
         self.layout = column(
-            row(self.title_main, self.input_reset, self.input_recalculate, self.input_stopword),
             row(
-                self.figure['ngram'],
-                self.figure['topics']
+                column(self.title['main'], row(self.input_recalculate, self.input_reset)), 
+                row(*self.inputs.values())
+            ),
+            row(
+                column(self.title['ngram'], self.figure['ngram']),
+                column(self.title['topics'], self.figure['topics'])
             ),
             column(
                 row(
-                    column(self.sample_title, self.sample_number),
+                    column(self.title['sample'], self.sample_number),
                     self.sample_legend
                 ),
                 self.sample_document
