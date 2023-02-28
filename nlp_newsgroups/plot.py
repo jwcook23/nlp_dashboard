@@ -4,7 +4,7 @@ import os
 import pickle
 
 from bokeh.plotting import figure
-from bokeh.models import Div, ColumnDataSource, Spinner, ColorBar, Button
+from bokeh.models import Div, ColumnDataSource, Spinner, ColorBar, Button, TextInput
 from bokeh.transform import linear_cmap, factor_cmap
 import pandas as pd
 from squarify import normalize_sizes, squarify
@@ -19,40 +19,119 @@ class plot(data, model):
 
         data.__init__(self)
 
-        self.model_cache()
-
         self.source = {}
         self.figure = {}
+        self.text = {}
+
+        self.model_cache()
 
         self.plot_titles()
+        self.input_stopword()
         self.reset_button()
-        self.plot_samples()
+
         self.plot_ngram()
         self.plot_topics()
+        self.plot_samples()
 
 
-    def model_cache(self):
+    def model_cache(self, model_params={}):
 
-        # TODO: option to clear model cache
         file_name = 'model.pkl'
-        if os.path.isfile(file_name):
-            with open('model.pkl', 'rb') as _fh:
-                self.model_params, self.ngram, self.topic = pickle.load(_fh)
-        else:
-            model.__init__(self)
+
+        if not os.path.isfile(file_name) or model_params:
+
+            model.__init__(self, **model_params)
+
             self.get_ngram(self.data_all['text'])
             self.get_topics(self.data_all['text'])
-            
-            with open('model.pkl', 'wb') as _fh:
-                pickle.dump([self.model_params, self.ngram, self.topic], _fh)
+
+            if model_params:
+                self.default_figures()
+
+            # TODO: save new model changes
+            if not model_params:
+
+                with open('model.pkl', 'wb') as _fh:
+                    pickle.dump([self.model_params, self.ngram, self.topic], _fh)
+    
+        else:
+            with open('model.pkl', 'rb') as _fh:
+                self.model_params, self.ngram, self.topic = pickle.load(_fh)
 
 
     def plot_titles(self):
 
         self.title_main = Div(
             text='Newsgroups NLP Dashboard',
-            styles={'font-size': '150%', 'font-weight': 'bold'}, width=400
+            styles={'font-size': '150%', 'font-weight': 'bold'}, width=350
         )
+
+
+    def default_figures(self):
+
+        self.default_ngram()
+        self.default_topics()
+        self.default_samples()
+
+
+    def default_ngram(self, top_num=25):
+
+        ngram = self.ngram['summary'].head(top_num)
+
+        self.source['ngram'].data = {
+            'y': ngram['terms'],
+            'right': ngram['term_count'],
+            'color': ngram['document_count']
+        }
+
+
+    def default_topics(self, top_num=10):
+
+        def treemap(df, col, x, y, dx, dy, *, N=100):
+            sub_df = df.nlargest(N, col)
+            normed = normalize_sizes(sub_df[col], dx, dy)
+            blocks = squarify(normed, x, y, dx, dy)
+            blocks_df = pd.DataFrame.from_dict(blocks).set_index(sub_df.index)
+            return sub_df.join(blocks_df, how='left').reset_index()
+
+        topics_combined = self.topic['summary'][self.topic['summary']['Rank']<top_num].copy()
+        topics_combined = topics_combined.sort_values(by='Weight')
+
+        topics_rollup = topics_combined.groupby('Topic').sum('Weight').sort_values(by='Weight')
+        source_text = treemap(topics_rollup, "Weight", 0, 0, self.figure['topics'].width, self.figure['topics'].height)
+
+        source_data = pd.DataFrame()
+        for _, (Topic, _, _, x, y, dx, dy) in source_text.iterrows():
+            df = topics_combined[topics_combined.Topic==Topic]
+            source_data = pd.concat([
+                source_data,
+                treemap(df, "Weight", x, y, dx, dy, N=10)
+            ], ignore_index=True)
+
+        source_data["ytop"] = source_data['y'] + source_data['dy']
+        source_data = source_data.to_dict(orient='series')
+
+        self.source['topics'].data = source_data
+        self.text['topic_num'].data = source_text.to_dict(orient='series')
+
+
+    def add_stopword(self, attr, old, new):
+
+        self.new_stopword.value = ""
+
+        new = new.strip().lower()
+
+        model_params = self.model_params
+        model_params['stop_words'] += [new]
+
+        self.model_cache(model_params)
+
+
+    def input_stopword(self):
+
+        self.new_stopword = TextInput(value="", title="Add Stopword:")
+
+        self.new_stopword.on_change('value', self.add_stopword)
 
 
     def selected_reset(self, event):
@@ -175,25 +254,20 @@ class plot(data, model):
         self.set_samples(sample_title, sample_legend, self.ngram['devectorized'], document_idx, highlight_tokens)
 
 
-    def plot_ngram(self, top_num=25):
+    def plot_ngram(self):
 
-        ngram = self.ngram['summary'].head(top_num)
+        self.source['ngram'] = ColumnDataSource()
+        self.default_ngram()
 
         self.figure['ngram'] = figure(
-            y_range=ngram['terms'], height=500, width=350, toolbar_location=None, tools="tap", 
+            y_range=self.source['ngram'].data['y'], height=500, width=350, toolbar_location=None, tools="tap", tooltips="@Term",
             title="Term Counts", x_axis_label='Term Count', y_axis_label='Term'
 
         )
 
-        self.source['ngram'] = ColumnDataSource(data=dict({
-            'y': ngram['terms'],
-            'right': ngram['term_count'],
-            'color': ngram['document_count']
-        }))
-
         cmap = linear_cmap(
             field_name='color', palette='Turbo256', 
-            low=min(ngram['document_count']), high=max(ngram['document_count'])
+            low=min(self.source['ngram'].data['color']), high=max(self.source['ngram'].data['color'])
         )
         color_bar = ColorBar(color_mapper=cmap['transform'], title='Document Count')
 
@@ -234,51 +308,28 @@ class plot(data, model):
         self.set_samples(sample_title, sample_legend, self.topic['devectorized'], document_idx, highlight_tokens)
 
 
-    def plot_topics(self, top_num=10):
-        
-        topics_combined = self.topic['summary'][self.topic['summary']['Rank']<top_num].copy()
-
-        topics_combined = topics_combined.sort_values(by='Weight')
-        topics_rollup = topics_combined.groupby('Topic').sum('Weight').sort_values(by='Weight')
-
-        def treemap(df, col, x, y, dx, dy, *, N=100):
-            sub_df = df.nlargest(N, col)
-            normed = normalize_sizes(sub_df[col], dx, dy)
-            blocks = squarify(normed, x, y, dx, dy)
-            blocks_df = pd.DataFrame.from_dict(blocks).set_index(sub_df.index)
-            return sub_df.join(blocks_df, how='left').reset_index()
-
-        width = 600
-        height = 500
-        topics_rollup = treemap(topics_rollup, "Weight", 0, 0, width, height)
-
-        self.source['topics'] = pd.DataFrame()
-        for _, (Topic, _, _, x, y, dx, dy) in topics_rollup.iterrows():
-            df = topics_combined[topics_combined.Topic==Topic]
-            self.source['topics'] = pd.concat([
-                self.source['topics'],
-                treemap(df, "Weight", x, y, dx, dy, N=10)
-            ], ignore_index=True)
-
-        self.source['topics']["ytop"] = self.source['topics']['y'] + self.source['topics']['dy']
-        self.source['topics'] = self.source['topics'].to_dict(orient='series')
-        self.source['topics'] = ColumnDataSource(data=self.source['topics'])
+    def plot_topics(self):
 
         self.figure['topics'] = figure(
-            width=width, height=height, tooltips="@Term", toolbar_location=None, tools="tap",
+            width=600, height=500, tooltips="@Term", toolbar_location=None, tools="tap",
             x_axis_location=None, y_axis_location=None, title='Document Topics'
         )
+
+        self.source['topics'] = ColumnDataSource()
+        self.text['topic_num'] = ColumnDataSource()
+        self.default_topics()
+
         self.figure['topics'].x_range.range_padding = self.figure['topics'].y_range.range_padding = 0
         self.figure['topics'].grid.grid_line_color = None
 
-        fill_color = factor_cmap("Topic", "MediumContrast5", topics_combined['Topic'].drop_duplicates())
+        fill_color = factor_cmap("Topic", "MediumContrast5", self.source['topics'].data['Topic'].drop_duplicates())
         self.figure['topics'].block(
             'x', 'y', 'dx', 'dy', source=self.source['topics'], line_width=1, line_color="white",
             fill_alpha=0.8, fill_color=fill_color
         )
 
         self.figure['topics'].text(
-            'x', 'y', x_offset=2, text="Topic", source=topics_rollup,
+            'x', 'y', x_offset=2, text="Topic", source=self.text['topic_num'],
             text_font_size="18pt", text_color="white"
         )
 
