@@ -170,11 +170,10 @@ class plot(data, model):
     def plot_ngram(self, top_num=25):
 
         ngram = self.ngram['summary'].head(top_num)
-        # .sort_values(by='term_count')
 
         self.figure['ngram'] = figure(
             y_range=ngram['terms'], height=500, width=400, toolbar_location=None, tools="tap", 
-            title="One & Two Word Term Counts", x_axis_label='Term Count', y_axis_label='Term'
+            title="Term Counts", x_axis_label='Term Count', y_axis_label='Term'
 
         )
 
@@ -193,7 +192,7 @@ class plot(data, model):
         self.figure['ngram'].hbar(
             source=self.source['ngram'], width=0.9, fill_color=cmap, line_color=None
         )
-        self.figure['ngram'].add_layout(color_bar, 'above')   
+        self.figure['ngram'].add_layout(color_bar, 'right')   
 
         self.source['ngram'].selected.on_change('indices', self.selected_ngram)
 
@@ -213,11 +212,12 @@ class plot(data, model):
             (self.topic['Distribution']['Topic'].isin(topics_number))
         ]
 
-        sample_subtitle = 'topic: '+','.join(topics_number.tolist())
+        limit = 10
+        sample_subtitle = f'top {10} terms: '+','.join(topics_number.tolist())
 
         document_idx = topics.index
         highlight_tokens = self.topic['summary'].loc[
-            (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Rank']<10),
+            (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Rank']<limit),
             'Term'
         ]
 
@@ -238,8 +238,8 @@ class plot(data, model):
             blocks_df = pd.DataFrame.from_dict(blocks).set_index(sub_df.index)
             return sub_df.join(blocks_df, how='left').reset_index()
 
-        width = 800
-        height = 450
+        width = 600
+        height = 500
         topics_rollup = treemap(topics_rollup, "Weight", 0, 0, width, height)
 
         self.source['topics'] = pd.DataFrame()
@@ -273,7 +273,7 @@ class plot(data, model):
         )
 
         self.figure['topics'].text('x', 'ytop', x_offset=2, y_offset=2, text="Term", source=self.source['topics'],
-            text_font_size="6pt", text_baseline="top",
+            text_font_size="10pt", text_baseline="top",
         )
 
         self.source['topics'].selected.on_change('indices', self.selected_topic)
