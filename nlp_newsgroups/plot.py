@@ -40,6 +40,7 @@ class plot(data, model):
 
         if not os.path.isfile(file_name) or model_params:
 
+            # TODO: popup that calculations are taking place
             model.__init__(self, **model_params)
 
             self.get_ngram(self.data_all['text'])
@@ -79,10 +80,12 @@ class plot(data, model):
         ngram = self.ngram['summary'].head(top_num)
 
         self.source['ngram'].data = {
-            'y': ngram['terms'],
-            'right': ngram['term_count'],
-            'color': ngram['document_count']
+            'Terms': ngram['terms'],
+            'Term Count': ngram['term_count'],
+            'Document Count': ngram['document_count']
         }
+
+        self.figure['ngram'].y_range.factors = ngram['terms'].tolist()
 
 
     def default_topics(self, top_num=10):
@@ -245,7 +248,7 @@ class plot(data, model):
         self.default_selections(ignore='ngram')
 
         sample_title = self.figure['ngram'].title.text
-        terms = self.source['ngram'].data['y'].iloc[new]
+        terms = self.source['ngram'].data['Terms'].iloc[new]
         sample_legend = f"Terms {','.join(terms.tolist())}"
 
         document_idx = self.ngram['features'][:, terms.index].nonzero()[0]
@@ -256,22 +259,22 @@ class plot(data, model):
 
     def plot_ngram(self):
 
+        self.figure['ngram'] = figure(
+            height=500, width=350, toolbar_location=None, tools="tap", tooltips="Document Count = @{Document Count}",
+            title="Term Counts", x_axis_label='Term Count', y_axis_label='Term', y_range=[]
+        )
+
         self.source['ngram'] = ColumnDataSource()
         self.default_ngram()
 
-        self.figure['ngram'] = figure(
-            y_range=self.source['ngram'].data['y'], height=500, width=350, toolbar_location=None, tools="tap", tooltips="@Term",
-            title="Term Counts", x_axis_label='Term Count', y_axis_label='Term'
-
-        )
-
         cmap = linear_cmap(
-            field_name='color', palette='Turbo256', 
-            low=min(self.source['ngram'].data['color']), high=max(self.source['ngram'].data['color'])
+            field_name='Document Count', palette='Turbo256', 
+            low=min(self.source['ngram'].data['Document Count']), high=max(self.source['ngram'].data['Document Count'])
         )
         color_bar = ColorBar(color_mapper=cmap['transform'], title='Document Count')
 
         self.figure['ngram'].hbar(
+            y='Terms', right='Term Count',
             source=self.source['ngram'], width=0.9, fill_color=cmap, line_color=None
         )
         self.figure['ngram'].add_layout(color_bar, 'right')   
