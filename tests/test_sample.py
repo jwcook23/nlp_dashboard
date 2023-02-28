@@ -28,7 +28,8 @@ def test_topic_lda(db):
     db.selected_topic(None, None, new=[0])
 
 
-@pytest.mark.parametrize('db', [('add_stopword')], indirect=True)
-def test_add_stopword(db):
+@pytest.mark.parametrize('db', [('recalculate_model')], indirect=True)
+def test_recalculate_model(db):
 
-    db.add_stopword(None, None, new='AX')
+    db.input_stopword.value = 'AX'
+    db.recalculate_model(None)

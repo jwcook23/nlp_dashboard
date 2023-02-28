@@ -40,14 +40,14 @@ class dashboard(plot):
     def generate_layout(self):
 
         self.layout = column(
-            row(self.title_main, self.new_stopword),
+            row(self.title_main, self.input_reset, self.input_recalculate, self.input_stopword),
             row(
                 self.figure['ngram'],
                 self.figure['topics']
             ),
             column(
                 row(
-                    row(column(self.sample_title, self.sample_number), self.input_reset),
+                    column(self.sample_title, self.sample_number),
                     self.sample_legend
                 ),
                 self.sample_document

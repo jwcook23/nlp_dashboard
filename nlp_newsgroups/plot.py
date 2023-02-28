@@ -4,7 +4,7 @@ import os
 import pickle
 
 from bokeh.plotting import figure
-from bokeh.models import Div, ColumnDataSource, Spinner, ColorBar, Button, TextInput
+from bokeh.models import Div, ColumnDataSource, Spinner, ColorBar, Button, TextInput, CustomJS
 from bokeh.transform import linear_cmap, factor_cmap
 import pandas as pd
 from squarify import normalize_sizes, squarify
@@ -26,8 +26,7 @@ class plot(data, model):
         self.model_cache()
 
         self.plot_titles()
-        self.input_stopword()
-        self.reset_button()
+        self.user_inputs()
 
         self.plot_ngram()
         self.plot_topics()
@@ -118,23 +117,16 @@ class plot(data, model):
         self.text['topic_num'].data = source_text.to_dict(orient='series')
 
 
-    def add_stopword(self, attr, old, new):
-
-        self.new_stopword.value = ""
-
-        new = new.strip().lower()
+    def recalculate_model(self, event):
 
         model_params = self.model_params
-        model_params['stop_words'] += [new]
+
+        stop_words = self.input_stopword.value.strip().lower()
+        if stop_words != "":
+            model_params['stop_words'] += [stop_words]
+        self.input_stopword.value = ""        
 
         self.model_cache(model_params)
-
-
-    def input_stopword(self):
-
-        self.new_stopword = TextInput(value="", title="Add Stopword:")
-
-        self.new_stopword.on_change('value', self.add_stopword)
 
 
     def selected_reset(self, event):
@@ -143,10 +135,17 @@ class plot(data, model):
         self.default_selections()
 
 
-    def reset_button(self):
+    def user_inputs(self):
 
         self.input_reset = Button(label="Reset Selections", button_type="success")
         self.input_reset.on_event("button_click", self.selected_reset)
+
+        self.input_recalculate = Button(label="Recalculate Models", button_type="danger")
+        self.input_recalculate.on_event("button_click", self.recalculate_model)
+        code = '{ alert("Recalculating Models! Please be patient."); }'
+        self.input_recalculate.js_on_click(CustomJS(code=code))
+
+        self.input_stopword = TextInput(value="", title="Add Stopword:")
 
 
     def default_samples(self):
