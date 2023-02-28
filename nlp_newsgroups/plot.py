@@ -136,21 +136,22 @@ class plot(data, model):
             matching_terms = re.finditer(pattern, tokens, flags=re.IGNORECASE)
 
             pattern = pd.Series(self.sample_devectorized[new])
-            if len(pattern)==0:
-                matching_features = []
-            else:
-                pattern = pattern[~pattern.isin(self.sample_highlight)]
-                pattern = pattern.str.replace(' ', r'\s+', regex=True)
-                pattern = '|'.join(r'\b'+pattern+r'\b')
-                matching_features = re.finditer(pattern, tokens, flags=re.IGNORECASE)
+            pattern = pattern[~pattern.isin(self.sample_highlight)]
+            pattern = pattern.str.replace(' ', r'\s+', regex=True)
+            pattern = '|'.join(r'\b'+pattern+r'\b')
+            matching_features = re.finditer(pattern, tokens, flags=re.IGNORECASE)
 
             text = list(text)
             for match in matching_terms:
-                text[match.start()] = f'<text="2"><strong>{text[match.start()]}'
-                text[match.end()] = f'{text[match.end()]}</text></strong>'
+                idx_start = match.start()
+                idx_end = match.end()-1
+                text[idx_start] = f'<text="2"><strong>{text[idx_start]}'
+                text[idx_end] = f'{text[idx_end]}</text></strong>'
             for match in matching_features:
-                text[match.start()] = f'<u>{text[match.start()]}'
-                text[match.end()] = f'{text[match.end()]}</u>'
+                idx_start = match.start()
+                idx_end = match.end()-1
+                text[idx_start] = f'<u>{text[idx_start]}'
+                text[idx_end] = f'{text[idx_end]}</u>'
             text = ''.join(text)
 
             self.sample_document.text = text
