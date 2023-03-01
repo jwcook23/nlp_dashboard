@@ -11,7 +11,7 @@ class model():
 
     def __init__(self, 
                  token_pattern='(?u)\\b\\w\\w+\\b', max_df=0.95, min_df=2, 
-                 stop_words=default_stopwords, num_features=1000, ngram_range=(1,2), topic_num=5, topic_approach='lda'
+                 stop_words=default_stopwords, num_features=1000, ngram_range=(1,2), topic_num=5, topic_approach='Latent Dirichlet Allocation'
                 ):
 
         self.model_params = {
@@ -56,26 +56,26 @@ class model():
 
         self.topic = {}
 
-        if self.model_params['topic_approach'] in ['nmf', 'mbnmf']:
+        if self.model_params['topic_approach'] in ['Non-negative Matrix Factorization', 'MiniBatch Non-negative Matrix Factorization']:
             vectorizer = 'tfidf'
         else:
             vectorizer = 'tf'
         self.get_topic_vectorizer(text, vectorizer)
 
 
-        if self.model_params['topic_approach'] == 'nmf':
+        if self.model_params['topic_approach'] == 'Non-negative Matrix Factorization':
             self.topic['model'] = NMF(
                 n_components=self.model_params['topic_num'], random_state=1, init="nndsvda", beta_loss="frobenius",
                 alpha_W=0.00005, alpha_H=0.00005, l1_ratio=1
             ).fit(self.topic['features'])
 
-        elif self.model_params['topic_approach'] == 'mbnmf':
+        elif self.model_params['topic_approach'] == 'MiniBatch Non-negative Matrix Factorization':
             self.topic['model'] = MiniBatchNMF(
                 n_components=self.model_params['topic_num'], random_state=1, init="nndsvda", beta_loss="frobenius",
                 alpha_W=0.00005, alpha_H=0.00005, l1_ratio=0.5, batch_size=128
             ).fit(self.topic['features'])
 
-        elif self.model_params['topic_approach'] == 'lda':
+        elif self.model_params['topic_approach'] == 'Latent Dirichlet Allocation':
             self.topic['model'] = LatentDirichletAllocation(
                 n_components=self.model_params['topic_num'], max_iter=5, learning_method="online",
                 learning_offset=50.0, random_state=0,

@@ -5,6 +5,7 @@
 # https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html#sphx-glr-auto-examples-text-plot-document-classification-20newsgroups-py
 
 # TODO: standard output to div to explain model steps and timing
+# https://docs.bokeh.org/en/2.4.2/docs/user_guide/interaction/callbacks.html
 
 # TODO: input custom stopwords and seperate figure like ngram
 

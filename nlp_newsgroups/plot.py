@@ -3,7 +3,7 @@ from operator import itemgetter
 import os
 import pickle
 
-from bokeh.plotting import figure
+from bokeh.plotting import figure, curdoc
 from bokeh.models import (
     Div, ColumnDataSource, Spinner, ColorBar, Button, TextInput, CustomJS,
     Slider, RangeSlider, NumericInput, Select
@@ -30,29 +30,30 @@ class plot(data, model):
 
         self.plot_titles()
         self.user_inputs()
+        
+        self.status_message = Div(text='')
 
         self.plot_ngram()
         self.plot_topics()
         self.plot_samples()
 
 
-    def model_cache(self, model_params={}):
+    def model_cache(self, input_params={}):
 
         file_name = 'model.pkl'
 
-        if not os.path.isfile(file_name) or model_params:
+        if not os.path.isfile(file_name) or input_params:
 
-            # TODO: popup that calculations are taking place
-            model.__init__(self, **model_params)
+            model.__init__(self, **input_params)
 
             self.get_ngram(self.data_all['text'])
             self.get_topics(self.data_all['text'])
 
-            if model_params:
+            if input_params:
                 self.default_figures()
 
             # TODO: save new model changes
-            if not model_params:
+            if not input_params:
 
                 with open('model.pkl', 'wb') as _fh:
                     pickle.dump([self.model_params, self.ngram, self.topic], _fh)
@@ -122,16 +123,33 @@ class plot(data, model):
         self.text['topic_num'].data = source_text.to_dict(orient='series')
 
 
+    def set_status(self, message):
+
+        # TODO: emit status message before callbacks complete
+        self.status_message.text = message
+
+
     def recalculate_model(self, event):
 
-        model_params = self.model_params
+        # message = "Recalculating Models! This may take a few minutes."
+        # self.popup_alert(message)
 
-        stop_words = self.input_stopword.value.strip().lower()
-        if stop_words != "":
-            model_params['stop_words'] += [stop_words]
-        self.inputs['stop_words'].value = ""
+        input_params = {key: val.value for key,val in self.inputs.items()}
+        
+        input_params['stop_words'] = self.model_params['stop_words']+[input_params['stop_words'].strip().lower()]
 
-        self.model_cache(model_params)
+        change_params = [key for key,val in input_params.items() if val!= self.model_params[key]]
+        change_params = [self.inputs[key].title for key in change_params]
+        change_params = ', '.join(change_params)
+
+        if change_params:
+
+            # message = f"Recalculating model with new parameters for: {change_params}"
+            # self.set_status(message)
+
+            self.inputs['stop_words'].value = ""
+
+            self.model_cache(input_params)
 
 
     def selected_reset(self, event):
@@ -152,7 +170,7 @@ class plot(data, model):
 
         # TODO: initialize model with these values, recalcuate if needed
         self.inputs = {
-            'stop_words': TextInput(value="", title="Add Stopword:", width=125),
+            'stop_words': TextInput(value="", title="Add Stopword", width=125),
             'max_df': Slider(start=0.75, end=1.0, value=0.95, step=0.05, title='Max Doc. Freq.', width=125),
             'min_df': Slider(start=1, end=len(self.data_all), value=2, step=1, title='Min Doc. #', width=125),
             'num_features': NumericInput(value=1000, low=1000, high=10000, title='# Features', width=75),

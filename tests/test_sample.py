@@ -31,5 +31,5 @@ def test_topic_lda(db):
 @pytest.mark.parametrize('db', [('recalculate_model')], indirect=True)
 def test_recalculate_model(db):
 
-    db.input_stopword.value = 'AX'
+    db.inputs['stop_words'].value = 'AX'
     db.recalculate_model(None)
