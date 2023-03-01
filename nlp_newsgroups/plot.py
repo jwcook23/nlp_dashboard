@@ -26,10 +26,11 @@ class plot(data, model):
         self.figure = {}
         self.text = {}
 
+        self.user_inputs()
+
         self.model_cache()
 
         self.plot_titles()
-        self.user_inputs()
         
         self.status_message = Div(text='')
 
@@ -125,7 +126,7 @@ class plot(data, model):
 
     def set_status(self, message):
 
-        # TODO: emit status message before callbacks complete
+        # BUG: emit status message before callbacks complete
         self.status_message.text = message
 
 
@@ -168,7 +169,7 @@ class plot(data, model):
         code = '{ alert("Recalculating Models! This may take a few minutes."); }'
         self.input_recalculate.js_on_click(CustomJS(code=code))
 
-        # TODO: initialize model with these values, recalcuate if needed
+        # BUG: initialize model with these values, recalcuate if needed
         self.inputs = {
             'stop_words': TextInput(value="", title="Add Stopword", width=125),
             'max_df': Slider(start=0.75, end=1.0, value=0.95, step=0.05, title='Max Doc. Freq.', width=125),

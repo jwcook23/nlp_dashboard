@@ -4,19 +4,15 @@
 # https://towardsdatascience.com/introduction-to-topic-modeling-using-scikit-learn-4c3f3290f5b9
 # https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html#sphx-glr-auto-examples-text-plot-document-classification-20newsgroups-py
 
-# TODO: standard output to div to explain model steps and timing
-# https://docs.bokeh.org/en/2.4.2/docs/user_guide/interaction/callbacks.html
+# TODO: predict new topics
 
 # TODO: input custom stopwords and seperate figure like ngram
 
-# TODO: named entity recognition
-
 # TODO: topic plot diagnostics
 # - distribution of assigned topic confidence
-# - predict new topic
 # - documents that don't fit any topic (add up confidence values)
 
-# TODO: recalcuate based on parameter changes of slicers
+# TODO: named entity recognition
 
 from bokeh.plotting import curdoc, output_file, show
 from bokeh.layouts import row, column
