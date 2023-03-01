@@ -51,9 +51,10 @@ class dashboard(plot):
                     Tabs(tabs=[
                         TabPanel(child=self.figure['topics'], title='Topic Summary'),
                         TabPanel(
-                            child=column(
-                                row(self.topic['predict']['calculate'], self.topic['predict']['input']),
-                                self.topic['predict']['result']
+                            child=row(
+                                self.topic['predict']['calculate'],
+                                self.topic['predict']['input'],
+                                self.topic['predict']['figure']
                             ),
                             title='Topic Prediction'
                         )

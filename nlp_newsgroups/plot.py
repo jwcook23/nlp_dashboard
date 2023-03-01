@@ -390,6 +390,8 @@ class plot(data, model):
 
         distribution = self.assign_topic(self.topic['model'], features)
 
+        self.topic['predict']['renderer'].data_source.data = distribution.to_dict(orient='list')
+
 
 
     def predict_topics(self):
@@ -397,18 +399,19 @@ class plot(data, model):
         self.topic['predict'] = {}
 
         self.topic['predict']['calculate'] = Button(label='Get Prediction', button_type='primary')
-        # self.topic['predict']['calculate'].on_event("button_click", self.selected_reset)
+        self.topic['predict']['calculate'].on_event("button_click", self.get_topic_prediction)
 
         self.topic['predict']['input'] = TextAreaInput(
-            value='', width=600, height=250, title='Predict topic for input text.'
+            value='', width=300, height=250, title='Predict topic for input text.'
         )
 
         self.topic['predict']['source'] = ColumnDataSource({'Topic':[], 'Confidence':[]})
 
-        self.topic['predict']['result'] = figure(
-            height=300, title='Topic Prediction'
+        self.topic['predict']['figure'] = figure(
+            y_range=self.topic_color.transform.factors, width=300, height=250, title='Topic Prediction',
+            x_axis_label='Confidence', toolbar_location=None
         )
 
-        self.topic['predict']['result'].vbar(
-            x='Topic', top='Confidence', source=self.topic['predict']['source'], fill_color=self.topic_color
+        self.topic['predict']['renderer'] = self.topic['predict']['figure'].hbar(
+            y='Topic', right='Confidence', source=self.topic['predict']['source'], fill_color=self.topic_color
         )
