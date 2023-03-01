@@ -16,6 +16,7 @@
 
 from bokeh.plotting import curdoc, output_file, show
 from bokeh.layouts import row, column
+from bokeh.models import TabPanel, Tabs
 
 from nlp_newsgroups.plot import plot
 
@@ -45,7 +46,19 @@ class dashboard(plot):
             ),
             row(
                 column(self.title['ngram'], self.figure['ngram']),
-                column(self.title['topics'], self.figure['topics'])
+                column(
+                    self.title['topics'],
+                    Tabs(tabs=[
+                        TabPanel(child=self.figure['topics'], title='Topic Summary'),
+                        TabPanel(
+                            child=column(
+                                row(self.topic['predict']['calculate'], self.topic['predict']['input']),
+                                self.topic['predict']['result']
+                            ),
+                            title='Topic Prediction'
+                        )
+                    ])
+                )
             ),
             column(
                 row(

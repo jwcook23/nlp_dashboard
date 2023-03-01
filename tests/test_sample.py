@@ -16,16 +16,23 @@ def db(request):
     show(page.layout)
 
 
-@pytest.mark.parametrize('db', [('ngram')], indirect=True)
-def test_ngram(db):
+@pytest.mark.parametrize('db', [('selected_ngram')], indirect=True)
+def test_selected_ngram(db):
 
     db.selected_ngram(None, None, new=[1])
 
 
-@pytest.mark.parametrize('db', [('topic_lda')], indirect=True)
-def test_topic_lda(db):
+@pytest.mark.parametrize('db', [('selected_topic')], indirect=True)
+def test_selected_topic(db):
 
     db.selected_topic(None, None, new=[0])
+
+
+@pytest.mark.parametrize('db', [('get_topic_prediction')], indirect=True)
+def test_get_topic_prediction(db):
+
+    db.topic['predict']['input'].value = 'Please say data is the new oil.'
+    db.get_topic_prediction(None)
 
 
 @pytest.mark.parametrize('db', [('recalculate_model')], indirect=True)

@@ -51,6 +51,20 @@ class model():
         self.ngram['summary'] = self.ngram['summary'].sort_values('term_count', ascending=False)
 
 
+    def assign_topic(self, topic_model, features):
+
+        distribution = topic_model.transform(features)
+        distribution = pd.DataFrame.from_records(distribution)
+        distribution.index.name = 'Document'
+        distribution = distribution.melt(var_name='Topic', value_name='Confidence', ignore_index=False)
+        distribution = distribution.sort_values(by=['Topic', 'Confidence'], ascending=[True, False])
+        rank = distribution.groupby('Document')['Confidence'].rank(ascending=False).astype('int64')
+        distribution['Rank'] = rank
+        distribution['Topic'] = 'Topic '+distribution['Topic'].astype('str')
+
+        return distribution
+
+
     @performance.timing
     def get_topics(self, text):
 
@@ -95,15 +109,7 @@ class model():
 
             self.topic['summary'] = pd.concat([self.topic['summary'], summary])
 
-        distribution = self.topic['model'].transform(self.topic['features'])
-        distribution = pd.DataFrame.from_records(distribution)
-        distribution.index.name = 'Document'
-        distribution = distribution.melt(var_name='Topic', value_name='Confidence', ignore_index=False)
-        distribution = distribution.sort_values(by=['Topic', 'Confidence'], ascending=[True, False])
-        rank = distribution.groupby('Document')['Topic'].rank(method='max').astype('int64')
-        distribution['Rank'] = rank
-        distribution['Topic'] = 'Topic '+distribution['Topic'].astype('str')
-        self.topic['Distribution'] = distribution
+        self.topic['Distribution'] = self.assign_topic(self.topic['model'], self.topic['features'])
 
 
     @performance.timing

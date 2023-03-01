@@ -6,7 +6,7 @@ import pickle
 from bokeh.plotting import figure, curdoc
 from bokeh.models import (
     Div, ColumnDataSource, Spinner, ColorBar, Button, TextInput, CustomJS,
-    Slider, RangeSlider, NumericInput, Select
+    Slider, RangeSlider, NumericInput, Select, TextAreaInput
 )
 from bokeh.transform import linear_cmap, factor_cmap
 import pandas as pd
@@ -36,6 +36,7 @@ class plot(data, model):
 
         self.plot_ngram()
         self.plot_topics()
+        self.predict_topics()
         self.plot_samples()
 
 
@@ -361,10 +362,10 @@ class plot(data, model):
         self.figure['topics'].x_range.range_padding = self.figure['topics'].y_range.range_padding = 0
         self.figure['topics'].grid.grid_line_color = None
 
-        fill_color = factor_cmap("Topic", "MediumContrast5", self.source['topics'].data['Topic'].drop_duplicates())
+        self.topic_color = factor_cmap("Topic", "MediumContrast5", self.source['topics'].data['Topic'].drop_duplicates())
         self.figure['topics'].block(
             'x', 'y', 'dx', 'dy', source=self.source['topics'], line_width=1, line_color="white",
-            fill_alpha=0.8, fill_color=fill_color
+            fill_alpha=0.8, fill_color=self.topic_color
         )
 
         self.figure['topics'].text(
@@ -377,3 +378,37 @@ class plot(data, model):
         )
 
         self.source['topics'].selected.on_change('indices', self.selected_topic)
+
+
+    def get_topic_prediction(self, event):
+
+        text = [self.topic['predict']['input'].value]
+
+        features = self.topic['vectorizer'].transform(text)
+
+        self.topic['vectorizer'].inverse_transform(features)
+
+        distribution = self.assign_topic(self.topic['model'], features)
+
+
+
+    def predict_topics(self):
+
+        self.topic['predict'] = {}
+
+        self.topic['predict']['calculate'] = Button(label='Get Prediction', button_type='primary')
+        # self.topic['predict']['calculate'].on_event("button_click", self.selected_reset)
+
+        self.topic['predict']['input'] = TextAreaInput(
+            value='', width=600, height=250, title='Predict topic for input text.'
+        )
+
+        self.topic['predict']['source'] = ColumnDataSource({'Topic':[], 'Confidence':[]})
+
+        self.topic['predict']['result'] = figure(
+            height=300, title='Topic Prediction'
+        )
+
+        self.topic['predict']['result'].vbar(
+            x='Topic', top='Confidence', source=self.topic['predict']['source'], fill_color=self.topic_color
+        )
