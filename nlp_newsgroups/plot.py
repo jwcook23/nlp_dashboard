@@ -22,6 +22,8 @@ class plot(data, model):
 
         data.__init__(self)
 
+        self.data_input = self.data_all['text']
+
         self.source = {}
         self.figure = {}
         self.text = {}
@@ -48,8 +50,8 @@ class plot(data, model):
 
             model.__init__(self, **input_params)
 
-            self.get_ngram(self.data_all['text'])
-            self.get_topics(self.data_all['text'])
+            self.get_ngram(self.data_input)
+            self.get_topics(self.data_input)
 
             if input_params:
                 self.default_figures()
@@ -224,10 +226,7 @@ class plot(data, model):
         self.default_samples()
 
 
-    def set_samples(self, sample_title, sample_legend, devectorized, document_idx, highlight_tokens):
-
-        text = self.data_all.loc[document_idx,'text']
-        devectorized = itemgetter(*document_idx)(devectorized)
+    def set_samples(self, sample_title, sample_legend, text, devectorized, highlight_tokens):
 
         self.title['sample'].text = f'Example Documents: {sample_title}'
         self.sample_legend.text = f'<strong>Legend</strong><br>Bold: {sample_legend}<br> Underline: other feature terms'
@@ -236,6 +235,7 @@ class plot(data, model):
         self.sample_text = text
         self.sample_highlight = highlight_tokens
         self.sample_devectorized = devectorized
+
         self.selected_sample(None, None, self.sample_number.value)
 
 
@@ -258,7 +258,10 @@ class plot(data, model):
             pattern = pattern[~pattern.isin(self.sample_highlight)]
             pattern = pattern.str.replace(' ', r'\s+', regex=True)
             pattern = '|'.join(r'\b'+pattern+r'\b')
-            matching_features = re.finditer(pattern, tokens, flags=re.IGNORECASE)
+            if pattern:
+                matching_features = re.finditer(pattern, tokens, flags=re.IGNORECASE)
+            else:
+                matching_features = []
 
             text = list(text)
             for match in matching_terms:
@@ -291,7 +294,10 @@ class plot(data, model):
         document_idx = self.ngram['features'][:, terms.index].nonzero()[0]
         highlight_tokens = terms
 
-        self.set_samples(sample_title, sample_legend, self.ngram['devectorized'], document_idx, highlight_tokens)
+        text = self.data_input[document_idx]
+        devectorized = itemgetter(*document_idx)(self.ngram['devectorized'])
+
+        self.set_samples(sample_title, sample_legend, text, devectorized, highlight_tokens)
 
 
     def plot_ngram(self):
@@ -345,7 +351,10 @@ class plot(data, model):
 
         sample_legend = f"{','.join(topics_number.tolist())} top {limit} terms [{', '.join(highlight_tokens.tolist())}]"
 
-        self.set_samples(sample_title, sample_legend, self.topic['devectorized'], document_idx, highlight_tokens)
+        text = self.data_input[document_idx]
+        devectorized = itemgetter(*document_idx)(self.ngram['devectorized'])
+
+        self.set_samples(sample_title, sample_legend, text, devectorized, highlight_tokens)
 
 
     def plot_topics(self):
@@ -382,16 +391,24 @@ class plot(data, model):
 
     def get_topic_prediction(self, event):
 
-        text = [self.topic['predict']['input'].value]
+        text = pd.Series([self.topic['predict']['input'].value])
 
         features = self.topic['vectorizer'].transform(text)
 
-        self.topic['vectorizer'].inverse_transform(features)
+        devectorized = self.topic['vectorizer'].inverse_transform(features)
 
         distribution = self.assign_topic(self.topic['model'], features)
 
         self.topic['predict']['renderer'].data_source.data = distribution.to_dict(orient='list')
 
+        # TODO: how to identify terms that are important to a topic, beside top 10
+        predicted_topic = distribution.loc[distribution['Rank']==1, 'Topic'][0]
+        highlight_tokens = self.topic['summary'].loc[
+            (self.topic['summary']['Topic']==predicted_topic),
+            # (self.topic['summary']['Rank']<10), 
+            'Term'
+        ]
+        self.set_samples('Topic Prediction', predicted_topic, text, devectorized, highlight_tokens)
 
 
     def predict_topics(self):
