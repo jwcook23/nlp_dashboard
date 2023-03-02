@@ -4,9 +4,9 @@
 # https://towardsdatascience.com/introduction-to-topic-modeling-using-scikit-learn-4c3f3290f5b9
 # https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html#sphx-glr-auto-examples-text-plot-document-classification-20newsgroups-py
 
-# TODO: predict new topics
+# TODO: display units for topic weight, use a percentage to highligh importances instead of generic top 10
 
-# TODO: input custom stopwords and seperate figure like ngram
+# TODO: ngram for stopwords (highlight in stample)
 
 # TODO: topic plot diagnostics
 # - distribution of assigned topic confidence
@@ -39,10 +39,22 @@ class dashboard(plot):
 
     def generate_layout(self):
 
+        general_hyperparameters = {
+            key:val for key,val in self.model_inputs.items() 
+            if key in ['token_pattern', 'max_df', 'min_df', 'stop_words', 'num_features', 'ngram_range']
+        }
+        topic_hyperparameters = {
+            key:val for key,val in self.model_inputs.items() 
+            if key in ['topic_num', 'topic_approach']
+        }
+
         self.layout = column(
             row(
-                column(self.title['main'], row(self.input_recalculate, self.input_reset)), 
-                row(*self.inputs.values())
+                column(self.title['main'], row(self.input_recalculate, self.input_reset)),
+                Tabs(tabs=[
+                    TabPanel(child=row(*general_hyperparameters.values()), title='General Hyperparameters'),
+                    TabPanel(child=row(*topic_hyperparameters.values()), title='Topic Hyperparemeters')
+                ])
             ),
             row(
                 column(self.title['ngram'], self.figure['ngram']),

@@ -1,18 +1,13 @@
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer, ENGLISH_STOP_WORDS
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.decomposition import NMF, MiniBatchNMF, LatentDirichletAllocation
 import pandas as pd
 import numpy as np
 
 from nlp_newsgroups import performance
 
-default_stopwords = list(ENGLISH_STOP_WORDS)
-
 class model():
 
-    def __init__(self, 
-                 token_pattern='(?u)\\b\\w\\w+\\b', max_df=0.95, min_df=2, 
-                 stop_words=default_stopwords, num_features=1000, ngram_range=(1,2), topic_num=5, topic_approach='Latent Dirichlet Allocation'
-                ):
+    def __init__(self, token_pattern, max_df, min_df, stop_words, num_features, ngram_range, topic_num, topic_approach):
 
         self.model_params = {
             'token_pattern': token_pattern,

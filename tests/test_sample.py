@@ -31,7 +31,7 @@ def test_selected_topic(db):
 @pytest.mark.parametrize('db', [('get_topic_prediction')], indirect=True)
 def test_get_topic_prediction(db):
 
-    db.topic['predict']['input'].value = 'People say data is the new oil.'
+    db.topic['predict']['input'].value = 'Football season is over now.'
     db.get_topic_prediction(None)
 
 

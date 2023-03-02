@@ -3,7 +3,7 @@ from operator import itemgetter
 import os
 import pickle
 
-from bokeh.plotting import figure, curdoc
+from bokeh.plotting import figure
 from bokeh.models import (
     Div, ColumnDataSource, Spinner, ColorBar, Button, TextInput, CustomJS,
     Slider, RangeSlider, NumericInput, Select, TextAreaInput
@@ -11,7 +11,7 @@ from bokeh.models import (
 from bokeh.transform import linear_cmap, factor_cmap
 import pandas as pd
 from squarify import normalize_sizes, squarify
-
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
 from nlp_newsgroups.data import data
 from nlp_newsgroups.model import model
@@ -45,20 +45,26 @@ class plot(data, model):
     def model_cache(self, input_params={}):
 
         file_name = 'model.pkl'
+        cache_exists = os.path.isfile(file_name)
+        params_changed = len(input_params)>0
 
-        if not os.path.isfile(file_name) or input_params:
+        if not cache_exists or input_params:
 
+            if not input_params:
+                input_params = {key:val.value for key,val in self.model_inputs.items()}
+                input_params['stop_words'] = list(ENGLISH_STOP_WORDS)
+
+            # BUG: check if slider parameters changed
             model.__init__(self, **input_params)
 
             self.get_ngram(self.data_input)
             self.get_topics(self.data_input)
 
-            if input_params:
+            if params_changed:
                 self.default_figures()
 
             # TODO: save new model changes
-            if not input_params:
-
+            if not params_changed:
                 with open('model.pkl', 'wb') as _fh:
                     pickle.dump([self.model_params, self.ngram, self.topic], _fh)
     
@@ -138,12 +144,12 @@ class plot(data, model):
         # message = "Recalculating Models! This may take a few minutes."
         # self.popup_alert(message)
 
-        input_params = {key: val.value for key,val in self.inputs.items()}
+        input_params = {key: val.value for key,val in self.model_inputs.items()}
         
         input_params['stop_words'] = self.model_params['stop_words']+[input_params['stop_words'].strip().lower()]
 
         change_params = [key for key,val in input_params.items() if val!= self.model_params[key]]
-        change_params = [self.inputs[key].title for key in change_params]
+        change_params = [self.model_inputs[key].title for key in change_params]
         change_params = ', '.join(change_params)
 
         if change_params:
@@ -151,7 +157,7 @@ class plot(data, model):
             # message = f"Recalculating model with new parameters for: {change_params}"
             # self.set_status(message)
 
-            self.inputs['stop_words'].value = ""
+            self.model_inputs['stop_words'].value = ""
 
             self.model_cache(input_params)
 
@@ -173,7 +179,14 @@ class plot(data, model):
         self.input_recalculate.js_on_click(CustomJS(code=code))
 
         # BUG: initialize model with these values, recalcuate if needed
-        self.inputs = {
+        token_pattern = [('(?u)\\b\\w\\w+\\b', '2 or more alphanumeric characters')]
+        self.model_inputs = {
+            'token_pattern': Select(
+                value=token_pattern[0][0], 
+                options=token_pattern,
+                title='Token Pattern',
+                width=250
+            ),
             'stop_words': TextInput(value="", title="Add Stopword", width=125),
             'max_df': Slider(start=0.75, end=1.0, value=0.95, step=0.05, title='Max Doc. Freq.', width=125),
             'min_df': Slider(start=1, end=len(self.data_all), value=2, step=1, title='Min Doc. #', width=125),
@@ -181,10 +194,10 @@ class plot(data, model):
             'ngram_range': RangeSlider(start=1, end=3, value=(1,2), step=1, title='N-Gram Range', width=125),
             'topic_num': Slider(start=2, end=10, value=5, step=1, title='# Topics', width=125),
             'topic_approach': Select(
-                value="Latent Dirichlet Allocation", 
+                value="Non-negative Matrix Factorization", 
                 options=["Latent Dirichlet Allocation", "Non-negative Matrix Factorization", "MiniBatch Non-negative Matrix Factorization"],
                 title='Topic Model',
-                width=200
+                width=300
             )
         }
 
@@ -337,12 +350,13 @@ class plot(data, model):
 
         topics_number = self.source['topics'].data['Topic'].iloc[new]
 
+        # TODO: include confidence in a plot somehow
         topics = self.topic['Distribution'][
-            (self.topic['Distribution']['Topic'].isin(topics_number)) & (self.topic['Distribution']['Confidence']>0.5)
+            (self.topic['Distribution']['Topic'].isin(topics_number)) & (self.topic['Distribution']['Rank']==1)
         ]
 
+        # TODO: include weight in a plot somehow
         limit = 10
-        
         document_idx = topics.index
         highlight_tokens = self.topic['summary'].loc[
             (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Rank']<limit),
