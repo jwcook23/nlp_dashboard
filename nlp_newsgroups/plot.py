@@ -249,7 +249,8 @@ class plot(data, model, actions):
         self.predict['calculate'].on_event("button_click", self.get_topic_prediction)
 
         self.predict['input'] = TextAreaInput(
-            value='', width=300, height=250, title='Predict topic for input text.'
+            value="Football season is over. so I'll have more time put my new hard drive in.",
+            width=300, height=250, title='Predict topic for input text.'
         )
 
         self.predict['source'] = ColumnDataSource({'Topic':[], 'Confidence':[]})

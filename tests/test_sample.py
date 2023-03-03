@@ -31,7 +31,7 @@ def test_selected_topic(db):
 @pytest.mark.parametrize('db', [('get_topic_prediction')], indirect=True)
 def test_get_topic_prediction(db):
 
-    db.predict['input'].value = """baseball season is over now, but i'll have more time to learn how to use my new computer"""
+    db.predict['input'].value = """football season is over. so I'll have more time to learn about my new mac"""
     db.get_topic_prediction(None)
 
 
@@ -40,6 +40,3 @@ def test_recalculate_model(db):
 
     db.model_inputs['stop_words'].value = 'AX'
     db.recalculate_model(None)
-
-    # db.topic['predict']['input'].value = """baseball season is over now, but i'll have more time to learn how to use my new mac computer"""
-    # db.get_topic_prediction(None)
