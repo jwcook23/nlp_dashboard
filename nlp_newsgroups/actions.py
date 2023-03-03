@@ -123,15 +123,15 @@ class actions():
         
         self.default_selections(ignore='ngram')
 
-        sample_title = self.figure['ngram'].title.text
-        terms = self.source['ngram'].data['Terms'].iloc[new]
+        sample_title = self.title['ngram'].text
+        important_terms = self.ngram['summary'].iloc[new]
 
-        document_idx = self.ngram['features'][:, terms.index].nonzero()[0]
-        important_terms = terms
+        document_idx = self.ngram['features'][:, important_terms.index].nonzero()[0]
 
         text = self.data_input[document_idx]
 
-        self.set_samples(sample_title, text, important_terms)
+        # TODO: show distribution of term importance
+        self.set_samples(sample_title, text, important_terms['terms'])
 
 
     def get_topic_prediction(self, event):
@@ -146,11 +146,11 @@ class actions():
 
         self.topic['predict']['renderer'].data_source.data = distribution.to_dict(orient='list')
 
-        # TODO: show distribution of term importance
         predicted_topic = distribution.loc[distribution['Confidence']>0, 'Topic']
         important_terms = self.topic['summary'].loc[
             (self.topic['summary']['Topic'].isin(predicted_topic)) & (self.topic['summary']['Weight']>0)
         ]
+        # TODO: show distribution of term importance
         self.set_samples('Topic Prediction', text, important_terms['Term'])
 
 
@@ -162,22 +162,20 @@ class actions():
         
         self.default_selections(ignore='topics')
 
-        sample_title = self.figure['topics'].title.text
+        sample_title = self.title['topics'].text
 
         topics_number = self.source['topics'].data['Topic'].iloc[new]
 
-        # TODO: include confidence in a plot somehow
         topics = self.topic['Distribution'][
             (self.topic['Distribution']['Topic'].isin(topics_number)) & (self.topic['Distribution']['Rank']==1)
         ]
 
-        # TODO: include weight in a plot somehow
         document_idx = topics.index
         important_terms = self.topic['summary'].loc[
-            (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Weight']>0),
-            'Term'
+            (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Weight']>0)
         ]
 
         text = self.data_input[document_idx]
 
-        self.set_samples(sample_title, text, important_terms)
+        # TODO: show distribution of term importance
+        self.set_samples(sample_title, text, important_terms['Term'])
