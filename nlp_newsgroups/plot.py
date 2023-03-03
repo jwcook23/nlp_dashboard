@@ -7,6 +7,7 @@ from bokeh.models import (
     Slider, RangeSlider, NumericInput, Select, TextAreaInput
 )
 from bokeh.transform import linear_cmap, factor_cmap
+from bokeh.palettes import Category10
 import pandas as pd
 from squarify import normalize_sizes, squarify
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
@@ -221,7 +222,8 @@ class plot(data, model, actions):
         self.figure['topics'].x_range.range_padding = self.figure['topics'].y_range.range_padding = 0
         self.figure['topics'].grid.grid_line_color = None
 
-        self.topic_color = factor_cmap("Topic", "MediumContrast5", self.source['topics'].data['Topic'].drop_duplicates())
+        factors = self.source['topics'].data['Topic'].drop_duplicates()
+        self.topic_color = factor_cmap("Topic", palette=Category10[10], factors=factors)
         self.figure['topics'].block(
             'x', 'y', 'dx', 'dy', source=self.source['topics'], line_width=1, line_color="white",
             fill_alpha=0.8, fill_color=self.topic_color
