@@ -4,15 +4,11 @@
 # https://towardsdatascience.com/introduction-to-topic-modeling-using-scikit-learn-4c3f3290f5b9
 # https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html#sphx-glr-auto-examples-text-plot-document-classification-20newsgroups-py
 
-# TODO: display units for topic weight, use a percentage to highligh importances instead of generic top 10
 
-# TODO: ngram for stopwords (highlight in stample)
-
-# TODO: topic plot diagnostics
-# - distribution of assigned topic confidence
-# - documents that don't fit any topic (add up confidence values)
-
+# TODO: ability to name topics
+# TODO: compare topic models
 # TODO: named entity recognition
+# TODO: ngram for stopwords
 
 from bokeh.plotting import curdoc, output_file, show
 from bokeh.layouts import row, column
@@ -64,9 +60,9 @@ class dashboard(plot):
                         TabPanel(child=self.figure['topics'], title='Topic Summary'),
                         TabPanel(
                             child=row(
-                                self.topic['predict']['calculate'],
-                                self.topic['predict']['input'],
-                                self.topic['predict']['figure']
+                                self.predict['calculate'],
+                                self.predict['input'],
+                                self.predict['figure']
                             ),
                             title='Topic Prediction'
                         )

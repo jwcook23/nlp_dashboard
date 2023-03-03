@@ -243,22 +243,22 @@ class plot(data, model, actions):
 
     def predict_topics(self):
 
-        self.topic['predict'] = {}
+        self.predict = {}
 
-        self.topic['predict']['calculate'] = Button(label='Get Prediction', button_type='primary')
-        self.topic['predict']['calculate'].on_event("button_click", self.get_topic_prediction)
+        self.predict['calculate'] = Button(label='Get Prediction', button_type='primary')
+        self.predict['calculate'].on_event("button_click", self.get_topic_prediction)
 
-        self.topic['predict']['input'] = TextAreaInput(
+        self.predict['input'] = TextAreaInput(
             value='', width=300, height=250, title='Predict topic for input text.'
         )
 
-        self.topic['predict']['source'] = ColumnDataSource({'Topic':[], 'Confidence':[]})
+        self.predict['source'] = ColumnDataSource({'Topic':[], 'Confidence':[]})
 
-        self.topic['predict']['figure'] = figure(
+        self.predict['figure'] = figure(
             y_range=self.topic_color.transform.factors, width=300, height=250, title='Topic Prediction',
             x_axis_label='Confidence', toolbar_location=None
         )
 
-        self.topic['predict']['renderer'] = self.topic['predict']['figure'].hbar(
-            y='Topic', right='Confidence', source=self.topic['predict']['source'], fill_color=self.topic_color
+        self.predict['renderer'] = self.predict['figure'].hbar(
+            y='Topic', right='Confidence', source=self.predict['source'], fill_color=self.topic_color
         )

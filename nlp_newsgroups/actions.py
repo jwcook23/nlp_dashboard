@@ -20,6 +20,8 @@ class actions():
         # message = "Recalculating Models! This may take a few minutes."
         # self.popup_alert(message)
 
+        self.selected_reset(None)
+
         input_params = {key: val.value for key,val in self.model_inputs.items()}
         
         input_params['stop_words'] = self.model_params['stop_words']+[input_params['stop_words'].strip().lower()]
@@ -138,13 +140,13 @@ class actions():
 
         self.default_selections()
 
-        text = pd.Series([self.topic['predict']['input'].value])
+        text = pd.Series([self.predict['input'].value])
 
         features = self.topic['vectorizer'].transform(text)
 
         distribution = self.assign_topic(self.topic['model'], features)
 
-        self.topic['predict']['renderer'].data_source.data = distribution.to_dict(orient='list')
+        self.predict['renderer'].data_source.data = distribution.to_dict(orient='list')
 
         predicted_topic = distribution.loc[distribution['Confidence']>0, 'Topic']
         important_terms = self.topic['summary'].loc[
