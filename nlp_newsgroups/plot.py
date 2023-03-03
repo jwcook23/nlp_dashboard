@@ -42,6 +42,40 @@ class plot(data, model):
         self.plot_samples()
 
 
+    def user_inputs(self):
+
+        self.input_reset = Button(label="Reset Selections", button_type="success")
+        self.input_reset.on_event("button_click", self.selected_reset)
+
+        self.input_recalculate = Button(label="Recalculate Models", button_type="danger")
+        self.input_recalculate.on_event("button_click", self.recalculate_model)
+        code = '{ alert("Recalculating Models! This may take a few minutes."); }'
+        self.input_recalculate.js_on_click(CustomJS(code=code))
+
+        # BUG: initialize model with these values, recalcuate if needed
+        token_pattern = [('(?u)\\b\\w\\w+\\b', '2 or more alphanumeric characters')]
+        self.model_inputs = {
+            'token_pattern': Select(
+                value=token_pattern[0][0], 
+                options=token_pattern,
+                title='Token Pattern',
+                width=250
+            ),
+            'stop_words': TextInput(value="", title="Add Stopword", width=125),
+            'max_df': Slider(start=0.75, end=1.0, value=0.95, step=0.05, title='Max Doc. Freq.', width=125),
+            'min_df': Slider(start=1, end=len(self.data_all), value=2, step=1, title='Min Doc. #', width=125),
+            'num_features': NumericInput(value=1000, low=1000, high=10000, title='# Features', width=75),
+            'ngram_range': RangeSlider(start=1, end=3, value=(1,2), step=1, title='N-Gram Range', width=125),
+            'topic_num': Slider(start=1, end=10, value=10, step=1, title='# Topics', width=125),
+            'topic_approach': Select(
+                value="Non-negative Matrix Factorization", 
+                options=["Latent Dirichlet Allocation", "Non-negative Matrix Factorization", "MiniBatch Non-negative Matrix Factorization"],
+                title='Topic Model',
+                width=300
+            )
+        }
+
+
     def model_cache(self, input_params={}):
 
         file_name = 'model.pkl'
@@ -120,7 +154,7 @@ class plot(data, model):
 
         source_data = pd.DataFrame()
         for _, (Topic, _, _, x, y, dx, dy) in source_text.iterrows():
-            df = topics_combined[topics_combined.Topic==Topic]
+            df = topics_combined[(topics_combined.Topic==Topic) & (topics_combined.Weight>0)]
             source_data = pd.concat([
                 source_data,
                 treemap(df, "Weight", x, y, dx, dy, N=10)
@@ -166,40 +200,6 @@ class plot(data, model):
 
         self.default_samples()
         self.default_selections()
-
-
-    def user_inputs(self):
-
-        self.input_reset = Button(label="Reset Selections", button_type="success")
-        self.input_reset.on_event("button_click", self.selected_reset)
-
-        self.input_recalculate = Button(label="Recalculate Models", button_type="danger")
-        self.input_recalculate.on_event("button_click", self.recalculate_model)
-        code = '{ alert("Recalculating Models! This may take a few minutes."); }'
-        self.input_recalculate.js_on_click(CustomJS(code=code))
-
-        # BUG: initialize model with these values, recalcuate if needed
-        token_pattern = [('(?u)\\b\\w\\w+\\b', '2 or more alphanumeric characters')]
-        self.model_inputs = {
-            'token_pattern': Select(
-                value=token_pattern[0][0], 
-                options=token_pattern,
-                title='Token Pattern',
-                width=250
-            ),
-            'stop_words': TextInput(value="", title="Add Stopword", width=125),
-            'max_df': Slider(start=0.75, end=1.0, value=0.95, step=0.05, title='Max Doc. Freq.', width=125),
-            'min_df': Slider(start=1, end=len(self.data_all), value=2, step=1, title='Min Doc. #', width=125),
-            'num_features': NumericInput(value=1000, low=1000, high=10000, title='# Features', width=75),
-            'ngram_range': RangeSlider(start=1, end=3, value=(1,2), step=1, title='N-Gram Range', width=125),
-            'topic_num': Slider(start=2, end=10, value=5, step=1, title='# Topics', width=125),
-            'topic_approach': Select(
-                value="Non-negative Matrix Factorization", 
-                options=["Latent Dirichlet Allocation", "Non-negative Matrix Factorization", "MiniBatch Non-negative Matrix Factorization"],
-                title='Topic Model',
-                width=300
-            )
-        }
 
 
     def default_samples(self):
@@ -404,6 +404,8 @@ class plot(data, model):
 
 
     def get_topic_prediction(self, event):
+
+        self.default_selections()
 
         text = pd.Series([self.topic['predict']['input'].value])
 
