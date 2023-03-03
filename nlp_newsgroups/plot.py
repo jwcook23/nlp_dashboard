@@ -212,7 +212,7 @@ class plot(data, model, actions):
 
         self.figure['topics'] = figure(
             width=800, height=500, tooltips="@Term", toolbar_location=None, tools="tap",
-            x_axis_location=None, y_axis_location=None
+            x_axis_location=None, y_axis_location=None, title='Topic Term Importance'
         )
 
         self.source['topics'] = ColumnDataSource()

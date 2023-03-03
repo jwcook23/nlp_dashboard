@@ -67,15 +67,14 @@ class actions():
             self.source[source].selected.indices = []
 
 
-    def set_samples(self, sample_title, sample_legend, text, devectorized, highlight_tokens):
+    def set_samples(self, sample_title, sample_legend, text, important_terms):
 
         self.title['sample'].text = f'Example Documents: {sample_title}'
         self.sample_legend.text = f'<strong>Legend</strong><br>Bold: {sample_legend}<br> Underline: other feature terms'
         self.sample_number.title = f'Document Sample #: {len(text)} total'
         self.sample_number.high = len(text)-1
         self.sample_text = text
-        self.sample_highlight = highlight_tokens
-        self.sample_devectorized = devectorized
+        self.sample_important_terms = important_terms
 
         self.selected_sample(None, None, self.sample_number.value)
 
@@ -90,31 +89,31 @@ class actions():
             pattern = '[^'+pattern+']'
             tokens = re.sub(pattern, ' ', text)
 
-            pattern = self.sample_highlight
+            pattern = self.sample_important_terms
             pattern = pattern.str.replace(' ', r'\s+', regex=True)
             pattern = '|'.join(r'\b'+pattern+r'\b')
-            matching_terms = re.finditer(pattern, tokens, flags=re.IGNORECASE)
+            important_terms = re.finditer(pattern, tokens, flags=re.IGNORECASE)
 
-            pattern = pd.Series(self.sample_devectorized[new])
-            pattern = pattern[~pattern.isin(self.sample_highlight)]
-            pattern = pattern.str.replace(' ', r'\s+', regex=True)
-            pattern = '|'.join(r'\b'+pattern+r'\b')
-            if pattern:
-                matching_features = re.finditer(pattern, tokens, flags=re.IGNORECASE)
-            else:
-                matching_features = []
+            # pattern = pd.Series(self.sample_devectorized[new])
+            # pattern = pattern[~pattern.isin(self.sample_highlight)]
+            # pattern = pattern.str.replace(' ', r'\s+', regex=True)
+            # pattern = '|'.join(r'\b'+pattern+r'\b')
+            # if pattern:
+            #     matching_features = re.finditer(pattern, tokens, flags=re.IGNORECASE)
+            # else:
+            #     matching_features = []
 
             text = list(text)
-            for match in matching_terms:
+            for match in important_terms:
                 idx_start = match.start()
                 idx_end = match.end()-1
                 text[idx_start] = f'<text="2"><strong>{text[idx_start]}'
                 text[idx_end] = f'{text[idx_end]}</text></strong>'
-            for match in matching_features:
-                idx_start = match.start()
-                idx_end = match.end()-1
-                text[idx_start] = f'<u>{text[idx_start]}'
-                text[idx_end] = f'{text[idx_end]}</u>'
+            # for match in matching_features:
+            #     idx_start = match.start()
+            #     idx_end = match.end()-1
+            #     text[idx_start] = f'<u>{text[idx_start]}'
+            #     text[idx_end] = f'{text[idx_end]}</u>'
             text = ''.join(text)
 
             self.sample_document.text = text
@@ -133,12 +132,11 @@ class actions():
         sample_legend = f"Terms {','.join(terms.tolist())}"
 
         document_idx = self.ngram['features'][:, terms.index].nonzero()[0]
-        highlight_tokens = terms
+        important_terms = terms
 
         text = self.data_input[document_idx]
-        devectorized = itemgetter(*document_idx)(self.ngram['devectorized'])
 
-        self.set_samples(sample_title, sample_legend, text, devectorized, highlight_tokens)
+        self.set_samples(sample_title, sample_legend, text, important_terms)
 
 
     def get_topic_prediction(self, event):
@@ -149,20 +147,16 @@ class actions():
 
         features = self.topic['vectorizer'].transform(text)
 
-        devectorized = self.topic['vectorizer'].inverse_transform(features)
-
         distribution = self.assign_topic(self.topic['model'], features)
 
         self.topic['predict']['renderer'].data_source.data = distribution.to_dict(orient='list')
 
         # TODO: how to identify terms that are important to a topic, beside top 10
-        predicted_topic = distribution.loc[distribution['Rank']==1, 'Topic'][0]
-        highlight_tokens = self.topic['summary'].loc[
-            (self.topic['summary']['Topic']==predicted_topic),
-            # (self.topic['summary']['Rank']<10), 
-            'Term'
+        predicted_topic = distribution.loc[distribution['Confidence']>0, 'Topic']
+        important_terms = self.topic['summary'].loc[
+            (self.topic['summary']['Topic'].isin(predicted_topic)) & (self.topic['summary']['Weight']>0)
         ]
-        self.set_samples('Topic Prediction', predicted_topic, text, devectorized, highlight_tokens)
+        self.set_samples('Topic Prediction', ','.join(predicted_topic), text, important_terms['Term'])
 
 
     def selected_topic(self, attr, old, new):
@@ -183,16 +177,14 @@ class actions():
         ]
 
         # TODO: include weight in a plot somehow
-        limit = 10
         document_idx = topics.index
-        highlight_tokens = self.topic['summary'].loc[
-            (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Rank']<limit),
+        important_terms = self.topic['summary'].loc[
+            (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Weight']>0),
             'Term'
         ]
 
-        sample_legend = f"{','.join(topics_number.tolist())} top {limit} terms [{', '.join(highlight_tokens.tolist())}]"
+        sample_legend = f"{','.join(topics_number.tolist())} Imporant Terms"
 
         text = self.data_input[document_idx]
-        devectorized = itemgetter(*document_idx)(self.ngram['devectorized'])
 
-        self.set_samples(sample_title, sample_legend, text, devectorized, highlight_tokens)
+        self.set_samples(sample_title, sample_legend, text, important_terms)
