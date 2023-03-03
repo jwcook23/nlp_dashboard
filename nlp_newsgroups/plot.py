@@ -112,7 +112,7 @@ class plot(data, model, actions):
     def plot_titles(self):
 
         self.title = {
-            'main': Div(text='Newsgroups NLP Dashboard', styles={'font-size': '150%', 'font-weight': 'bold'}, width=275),
+            'main': Div(text=f'NLP Dashboard<br>{len(self.data_input):,} Documents', styles={'font-size': '150%', 'font-weight': 'bold'}, width=275),
             'ngram': Div(text='Term Counts', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
             'topics': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
             'sample': Div(text='', styles={'font-weight': 'bold', 'font-size': '125%'}, width=250)

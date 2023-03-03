@@ -67,10 +67,10 @@ class actions():
             self.source[source].selected.indices = []
 
 
-    def set_samples(self, sample_title, sample_legend, text, important_terms):
+    def set_samples(self, sample_title, text, important_terms):
 
-        self.title['sample'].text = f'Example Documents: {sample_title}'
-        self.sample_legend.text = f'<strong>Legend</strong><br>Bold: {sample_legend}<br> Underline: other feature terms'
+        self.title['sample'].text = f'Example Documents:<br>{sample_title}'
+        self.sample_legend.text = '<u>Legend:</u><br><strong>Imporant Terms</strong><br><s>Stop Words</s>'
         self.sample_number.title = f'Document Sample #: {len(text)} total'
         self.sample_number.high = len(text)-1
         self.sample_text = text
@@ -94,26 +94,22 @@ class actions():
             pattern = '|'.join(r'\b'+pattern+r'\b')
             important_terms = re.finditer(pattern, tokens, flags=re.IGNORECASE)
 
-            # pattern = pd.Series(self.sample_devectorized[new])
-            # pattern = pattern[~pattern.isin(self.sample_highlight)]
-            # pattern = pattern.str.replace(' ', r'\s+', regex=True)
-            # pattern = '|'.join(r'\b'+pattern+r'\b')
-            # if pattern:
-            #     matching_features = re.finditer(pattern, tokens, flags=re.IGNORECASE)
-            # else:
-            #     matching_features = []
+            pattern = pd.Series(self.model_params['stop_words'])
+            pattern = pattern.str.replace(' ', r'\s+', regex=True)
+            pattern = '|'.join(r'\b'+pattern+r'\b')
+            stopword_terms = re.finditer(pattern, tokens, flags=re.IGNORECASE)
 
             text = list(text)
             for match in important_terms:
                 idx_start = match.start()
                 idx_end = match.end()-1
-                text[idx_start] = f'<text="2"><strong>{text[idx_start]}'
+                text[idx_start] = f'<text="3"><strong>{text[idx_start]}'
                 text[idx_end] = f'{text[idx_end]}</text></strong>'
-            # for match in matching_features:
-            #     idx_start = match.start()
-            #     idx_end = match.end()-1
-            #     text[idx_start] = f'<u>{text[idx_start]}'
-            #     text[idx_end] = f'{text[idx_end]}</u>'
+            for match in stopword_terms:
+                idx_start = match.start()
+                idx_end = match.end()-1
+                text[idx_start] = f'<s>{text[idx_start]}'
+                text[idx_end] = f'{text[idx_end]}</s>'
             text = ''.join(text)
 
             self.sample_document.text = text
@@ -129,14 +125,13 @@ class actions():
 
         sample_title = self.figure['ngram'].title.text
         terms = self.source['ngram'].data['Terms'].iloc[new]
-        sample_legend = f"Terms {','.join(terms.tolist())}"
 
         document_idx = self.ngram['features'][:, terms.index].nonzero()[0]
         important_terms = terms
 
         text = self.data_input[document_idx]
 
-        self.set_samples(sample_title, sample_legend, text, important_terms)
+        self.set_samples(sample_title, text, important_terms)
 
 
     def get_topic_prediction(self, event):
@@ -151,12 +146,12 @@ class actions():
 
         self.topic['predict']['renderer'].data_source.data = distribution.to_dict(orient='list')
 
-        # TODO: how to identify terms that are important to a topic, beside top 10
+        # TODO: show distribution of term importance
         predicted_topic = distribution.loc[distribution['Confidence']>0, 'Topic']
         important_terms = self.topic['summary'].loc[
             (self.topic['summary']['Topic'].isin(predicted_topic)) & (self.topic['summary']['Weight']>0)
         ]
-        self.set_samples('Topic Prediction', ','.join(predicted_topic), text, important_terms['Term'])
+        self.set_samples('Topic Prediction', text, important_terms['Term'])
 
 
     def selected_topic(self, attr, old, new):
@@ -183,8 +178,6 @@ class actions():
             'Term'
         ]
 
-        sample_legend = f"{','.join(topics_number.tolist())} Imporant Terms"
-
         text = self.data_input[document_idx]
 
-        self.set_samples(sample_title, sample_legend, text, important_terms)
+        self.set_samples(sample_title, text, important_terms)
