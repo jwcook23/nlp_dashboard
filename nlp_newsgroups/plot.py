@@ -27,8 +27,9 @@ class plot(data, model, actions):
 
         self.data_input = self.data_all['text']
 
-        self.source = {}
         self.figure = {}
+        self.source = {}
+        self.glyph = {}
 
         self.user_inputs()
 
@@ -170,14 +171,16 @@ class plot(data, model, actions):
         self.source['topics'].data = source_data
         self.source['topic_number'].data = source_text.to_dict(orient='series')
 
+        factors = self.source['topics'].data['Topic'].drop_duplicates().reset_index(drop=True)
+        self.topic_color = factor_cmap("Topic", palette=Category10[10], factors=factors)
+
 
     def default_topic_assignment(self):
 
         self.figure['topic_assignment'].title.text = 'Topic Term Importance: select topic to display'
         self.input_topic_name.title = 'No Topic Selected'
         self.input_topic_name.value = ''
-        self.figure['topic_assignment'].x_range.factors = []
-        self.source['topic_assignment'] = ColumnDataSource({'Term': [], 'Weight': []})
+        self.source['topic_assignment'].data = {'Term': [], 'Weight': []}
 
 
     def plot_samples(self):
@@ -234,14 +237,12 @@ class plot(data, model, actions):
         self.figure['topics'].x_range.range_padding = self.figure['topics'].y_range.range_padding = 0
         self.figure['topics'].grid.grid_line_color = None
 
-        factors = self.source['topics'].data['Topic'].drop_duplicates().reset_index(drop=True)
-        self.topic_color = factor_cmap("Topic", palette=Category10[10], factors=factors)
-        glyph_topic_term = self.figure['topics'].block(
+        self.glyph['topic_term'] = self.figure['topics'].block(
             'x', 'y', 'dx', 'dy', source=self.source['topics'], line_width=1, line_color="white",
             fill_alpha=0.8, fill_color=self.topic_color
         )
 
-        glyph_topic_number = self.figure['topics'].text(
+        self.glyph['topic_number'] = self.figure['topics'].text(
             'x', 'y', x_offset=2, text="Topic", source=self.source['topic_number'],
             text_font_size="18pt", text_color="white"
         )
@@ -250,13 +251,13 @@ class plot(data, model, actions):
             text_font_size="10pt", text_baseline="top",
         )
 
-        hover_topic_number = HoverTool(renderers=[glyph_topic_number], tooltips=[('Topic', '@Topic')])
+        hover_topic_number = HoverTool(renderers=[self.glyph['topic_number']], tooltips=[('Topic', '@Topic')])
         self.figure['topics'].add_tools(hover_topic_number)
 
-        hover_topic_term = HoverTool(renderers=[glyph_topic_term], tooltips=[('Term', '@Term')])
+        hover_topic_term = HoverTool(renderers=[self.glyph['topic_term']], tooltips=[('Term', '@Term')])
         self.figure['topics'].add_tools(hover_topic_term)
 
-        self.figure['topics'].add_tools(TapTool(renderers=[glyph_topic_number]))
+        self.figure['topics'].add_tools(TapTool(renderers=[self.glyph['topic_number']]))
         self.source['topic_number'].selected.on_change('indices', self.selected_topic)
 
 
@@ -271,6 +272,7 @@ class plot(data, model, actions):
         )
         self.figure['topic_assignment'].xaxis.major_label_orientation = pi/4
 
+        self.source['topic_assignment'] = ColumnDataSource({'Term': [], 'Weight': []})
         self.default_topic_assignment()
 
         self.figure['topic_assignment'].line(

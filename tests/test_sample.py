@@ -29,6 +29,8 @@ def test_selected_topic(db):
     db.input_topic_name.value = 'Topic Renamed'
     db.replace_topic_name(None)
 
+    db.selected_topic(None, None, [8])
+
 
 
 @pytest.mark.parametrize('db', [('get_topic_prediction')], indirect=True)

@@ -167,6 +167,7 @@ class actions():
         
         self.topic['summary']['Topic'] = self.topic['summary']['Topic'].replace(self.topic_number, new_name)
         self.default_topics()
+        self.glyph['topic_term'].glyph.fill_color = self.topic_color
         self.default_topic_assignment()
         self.default_selections()
 
@@ -196,8 +197,8 @@ class actions():
 
         self.figure['topic_assignment'].title.text = f"Topic Term Importance: {self.topic_number}"
         self.input_topic_name.title = self.topic_number
-        self.figure['topic_assignment'].x_range.factors = important_terms['Term'].tolist()
         self.source['topic_assignment'].data = important_terms[['Term','Weight']].to_dict(orient='list')
+        self.figure['topic_assignment'].x_range.factors = important_terms['Term'].tolist()
         idx = self.topic_color.transform.factors[
             self.topic_color.transform.factors==self.topic_number
         ].index[0]
