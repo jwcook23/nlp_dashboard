@@ -26,11 +26,14 @@ def test_selected_ngram(db):
 def test_selected_topic(db):
 
     db.selected_topic(None, None, new=[0])
+
+
+@pytest.mark.parametrize('db', [('rename_topic')], indirect=True)
+def test_rename_topic(db):
+
+    db.selected_topic(None, None, new=[0])
     db.input_topic_name.value = 'Topic Renamed'
-    db.replace_topic_name(None)
-
-    db.selected_topic(None, None, [8])
-
+    db.rename_topic(None)
 
 
 @pytest.mark.parametrize('db', [('get_topic_prediction')], indirect=True)

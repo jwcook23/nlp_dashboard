@@ -178,7 +178,7 @@ class plot(data, model, actions):
     def default_topic_assignment(self):
 
         self.figure['topic_assignment'].title.text = 'Topic Term Importance: select topic to display'
-        self.input_topic_name.title = 'No Topic Selected'
+        self.input_topic_name.title = 'Select to Rename'
         self.input_topic_name.value = ''
         self.source['topic_assignment'].data = {'Term': [], 'Weight': []}
 
@@ -264,8 +264,8 @@ class plot(data, model, actions):
     def plot_assignment(self):
 
         self.input_topic_name = TextInput(value="", title="", width=125)
-        self.set_topic_name = Button(label="Assign Name", button_type="default", width=125)
-        self.set_topic_name.on_event("button_click", self.replace_topic_name)
+        self.set_topic_name = Button(label="Rename Topic", button_type="default", width=125)
+        self.set_topic_name.on_event("button_click", self.rename_topic)
 
         self.figure['topic_assignment'] = figure(
             width=800, height=200, toolbar_location=None, tools="tap", x_range=[]

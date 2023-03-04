@@ -158,12 +158,13 @@ class actions():
         self.set_samples('Topic Prediction', text, important_terms['Term'])
 
 
-    def replace_topic_name(self, event):
+    def rename_topic(self, event):
 
         # TODO: save model with new topic name
         idx = self.topic['name'].index(self.topic_number)
         new_name = self.input_topic_name.value
         self.topic['name'][idx] = new_name
+        self.predict['figure'].y_range.factors = self.topic['name']
         
         self.topic['summary']['Topic'] = self.topic['summary']['Topic'].replace(self.topic_number, new_name)
         self.default_topics()
