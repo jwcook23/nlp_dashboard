@@ -47,13 +47,12 @@ class model():
     def assign_topic(self, topic_model, features):
 
         distribution = topic_model.transform(features)
-        distribution = pd.DataFrame.from_records(distribution)
+        distribution = pd.DataFrame.from_records(distribution, columns=self.topic['name'])
         distribution.index.name = 'Document'
         distribution = distribution.melt(var_name='Topic', value_name='Confidence', ignore_index=False)
         distribution = distribution.sort_values(by=['Topic', 'Confidence'], ascending=[True, False])
         rank = distribution.groupby('Document')['Confidence'].rank(ascending=False).astype('int64')
         distribution['Rank'] = rank
-        distribution['Topic'] = 'Topic '+distribution['Topic'].astype('str')
 
         return distribution
 
@@ -89,17 +88,20 @@ class model():
             ).fit(self.topic['features'])
 
         self.topic['summary'] = pd.DataFrame()
+        self.topic['name'] = []
         for topic_num, topic_weight in enumerate(self.topic['model'].components_):
             
             summary = pd.DataFrame({
-                'Topic': [topic_num]*self.model_params['num_features'],
+                'Topic': [None]*self.model_params['num_features'],
                 'Term': self.topic['terms'],
                 'Weight': topic_weight
             })
             summary = summary.sort_values('Weight', ascending=False)
             summary['Rank'] = range(0,len(summary))
-            summary['Topic'] = 'Topic '+summary['Topic'].astype('str')
+            name = f'Unnamed # {topic_num}'
 
+            summary['Topic'] = name
+            self.topic['name'] += [name]
             self.topic['summary'] = pd.concat([self.topic['summary'], summary])
 
         self.topic['Distribution'] = self.assign_topic(self.topic['model'], self.topic['features'])

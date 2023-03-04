@@ -5,7 +5,7 @@ from math import pi
 from bokeh.plotting import figure
 from bokeh.models import (
     Div, ColumnDataSource, Spinner, ColorBar, Button, TextInput, CustomJS,
-    Slider, RangeSlider, NumericInput, Select, TextAreaInput
+    Slider, RangeSlider, NumericInput, Select, TextAreaInput, TapTool, HoverTool
 )
 from bokeh.transform import linear_cmap, factor_cmap
 from bokeh.palettes import Category10
@@ -29,7 +29,6 @@ class plot(data, model, actions):
 
         self.source = {}
         self.figure = {}
-        self.text = {}
 
         self.user_inputs()
 
@@ -169,12 +168,14 @@ class plot(data, model, actions):
         source_data = source_data.to_dict(orient='series')
 
         self.source['topics'].data = source_data
-        self.text['topic_num'].data = source_text.to_dict(orient='series')
+        self.source['topic_number'].data = source_text.to_dict(orient='series')
 
 
     def default_topic_assignment(self):
 
-        self.figure['topic_assignment'].title = 'Topic Term Importance: select topic to display'
+        self.figure['topic_assignment'].title.text = 'Topic Term Importance: select topic to display'
+        self.input_topic_name.title = 'No Topic Selected'
+        self.input_topic_name.value = ''
         self.figure['topic_assignment'].x_range.factors = []
         self.source['topic_assignment'] = ColumnDataSource({'Term': [], 'Weight': []})
 
@@ -222,12 +223,12 @@ class plot(data, model, actions):
     def plot_topics(self):
 
         self.figure['topics'] = figure(
-            width=950, height=300, tooltips="@Term", toolbar_location=None, tools="tap",
+            width=950, height=300, toolbar_location=None,
             x_axis_location=None, y_axis_location=None, title='Topic Term Importance'
         )
 
         self.source['topics'] = ColumnDataSource()
-        self.text['topic_num'] = ColumnDataSource()
+        self.source['topic_number'] = ColumnDataSource()
         self.default_topics()
 
         self.figure['topics'].x_range.range_padding = self.figure['topics'].y_range.range_padding = 0
@@ -235,13 +236,13 @@ class plot(data, model, actions):
 
         factors = self.source['topics'].data['Topic'].drop_duplicates().reset_index(drop=True)
         self.topic_color = factor_cmap("Topic", palette=Category10[10], factors=factors)
-        self.figure['topics'].block(
+        glyph_topic_term = self.figure['topics'].block(
             'x', 'y', 'dx', 'dy', source=self.source['topics'], line_width=1, line_color="white",
             fill_alpha=0.8, fill_color=self.topic_color
         )
 
-        self.figure['topics'].text(
-            'x', 'y', x_offset=2, text="Topic", source=self.text['topic_num'],
+        glyph_topic_number = self.figure['topics'].text(
+            'x', 'y', x_offset=2, text="Topic", source=self.source['topic_number'],
             text_font_size="18pt", text_color="white"
         )
 
@@ -249,14 +250,21 @@ class plot(data, model, actions):
             text_font_size="10pt", text_baseline="top",
         )
 
-        self.source['topics'].selected.on_change('indices', self.selected_topic)
+        hover_topic_number = HoverTool(renderers=[glyph_topic_number], tooltips=[('Topic', '@Topic')])
+        self.figure['topics'].add_tools(hover_topic_number)
+
+        hover_topic_term = HoverTool(renderers=[glyph_topic_term], tooltips=[('Term', '@Term')])
+        self.figure['topics'].add_tools(hover_topic_term)
+
+        self.figure['topics'].add_tools(TapTool(renderers=[glyph_topic_number]))
+        self.source['topic_number'].selected.on_change('indices', self.selected_topic)
 
 
     def plot_assignment(self):
 
-        self.input_topic_name = TextInput(value="", title="Assign Topic Name", width=125)
-        self.set_topic_name = Button(label="Click to Assign", button_type="default", width=125)
-        # self.set_topic_name.on_event("button_click", self.replace_topic_name)
+        self.input_topic_name = TextInput(value="", title="", width=125)
+        self.set_topic_name = Button(label="Assign Name", button_type="default", width=125)
+        self.set_topic_name.on_event("button_click", self.replace_topic_name)
 
         self.figure['topic_assignment'] = figure(
             width=800, height=200, toolbar_location=None, tools="tap", x_range=[]

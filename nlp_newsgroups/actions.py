@@ -61,6 +61,7 @@ class actions():
     def default_selections(self, ignore=None):
 
         self.sample_number.value = 0
+        self.topic_number = None
 
         reset = list(self.source.keys())
         if ignore is not None:
@@ -157,6 +158,19 @@ class actions():
         self.set_samples('Topic Prediction', text, important_terms['Term'])
 
 
+    def replace_topic_name(self, event):
+
+        # TODO: save model with new topic name
+        idx = self.topic['name'].index(self.topic_number)
+        new_name = self.input_topic_name.value
+        self.topic['name'][idx] = new_name
+        
+        self.topic['summary']['Topic'] = self.topic['summary']['Topic'].replace(self.topic_number, new_name)
+        self.default_topics()
+        self.default_topic_assignment()
+        self.default_selections()
+
+
     def selected_topic(self, attr, old, new):
 
         if len(new) == 0:
@@ -167,10 +181,10 @@ class actions():
 
         sample_title = self.title['topics'].text
 
-        topics_number = self.source['topics'].data['Topic'].iloc[new]
+        self.topic_number = self.source['topic_number'].data['Topic'].iloc[new].values[0]
 
         topics = self.topic['Distribution'][
-            (self.topic['Distribution']['Topic'].isin(topics_number)) & (self.topic['Distribution']['Rank']==1)
+            (self.topic['Distribution']['Topic']==self.topic_number) & (self.topic['Distribution']['Rank']==1)
         ]
 
         document_idx = topics.index
@@ -180,11 +194,12 @@ class actions():
 
         text = self.data_input[document_idx]
 
-        self.figure['topic_assignment'].title.text = f"Topic Term Importance: {', '.join(topics_number)}"
+        self.figure['topic_assignment'].title.text = f"Topic Term Importance: {self.topic_number}"
+        self.input_topic_name.title = self.topic_number
         self.figure['topic_assignment'].x_range.factors = important_terms['Term'].tolist()
         self.source['topic_assignment'].data = important_terms[['Term','Weight']].to_dict(orient='list')
         idx = self.topic_color.transform.factors[
-            self.topic_color.transform.factors.isin(topics_number)
+            self.topic_color.transform.factors==self.topic_number
         ].index[0]
         topic_color = self.topic_color.transform.palette[idx]
 
