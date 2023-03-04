@@ -1,5 +1,6 @@
 import os
 import pickle
+from math import pi
 
 from bokeh.plotting import figure
 from bokeh.models import (
@@ -40,6 +41,7 @@ class plot(data, model, actions):
 
         self.plot_ngram()
         self.plot_topics()
+        self.plot_assignment()
         self.predict_topics()
         self.plot_samples()
 
@@ -123,6 +125,7 @@ class plot(data, model, actions):
 
         self.default_ngram()
         self.default_topics()
+        self.default_topic_assignment()
         self.default_samples()
 
 
@@ -169,6 +172,13 @@ class plot(data, model, actions):
         self.text['topic_num'].data = source_text.to_dict(orient='series')
 
 
+    def default_topic_assignment(self):
+
+        self.figure['topic_assignment'].title = 'Topic Term Importance: select topic to display'
+        self.figure['topic_assignment'].x_range.factors = []
+        self.source['topic_assignment'] = ColumnDataSource({'Term': [], 'Weight': []})
+
+
     def plot_samples(self):
 
         self.sample_legend = Div(text='')
@@ -186,9 +196,10 @@ class plot(data, model, actions):
     def plot_ngram(self):
 
         self.figure['ngram'] = figure(
-            height=500, width=400, toolbar_location=None, tools="tap", tooltips="Document Count = @{Document Count}",
+            height=500, width=350, toolbar_location=None, tools="tap", tooltips="Document Count = @{Document Count}",
             x_axis_label='Term Count', y_axis_label='Term', y_range=[]
         )
+        self.figure['ngram'].xaxis.major_label_orientation = pi/4
 
         self.source['ngram'] = ColumnDataSource()
         self.default_ngram()
@@ -211,7 +222,7 @@ class plot(data, model, actions):
     def plot_topics(self):
 
         self.figure['topics'] = figure(
-            width=800, height=500, tooltips="@Term", toolbar_location=None, tools="tap",
+            width=950, height=300, tooltips="@Term", toolbar_location=None, tools="tap",
             x_axis_location=None, y_axis_location=None, title='Topic Term Importance'
         )
 
@@ -222,7 +233,7 @@ class plot(data, model, actions):
         self.figure['topics'].x_range.range_padding = self.figure['topics'].y_range.range_padding = 0
         self.figure['topics'].grid.grid_line_color = None
 
-        factors = self.source['topics'].data['Topic'].drop_duplicates()
+        factors = self.source['topics'].data['Topic'].drop_duplicates().reset_index(drop=True)
         self.topic_color = factor_cmap("Topic", palette=Category10[10], factors=factors)
         self.figure['topics'].block(
             'x', 'y', 'dx', 'dy', source=self.source['topics'], line_width=1, line_color="white",
@@ -239,6 +250,24 @@ class plot(data, model, actions):
         )
 
         self.source['topics'].selected.on_change('indices', self.selected_topic)
+
+
+    def plot_assignment(self):
+
+        self.input_topic_name = TextInput(value="", title="Assign Topic Name", width=125)
+        self.set_topic_name = Button(label="Click to Assign", button_type="default", width=125)
+        # self.set_topic_name.on_event("button_click", self.replace_topic_name)
+
+        self.figure['topic_assignment'] = figure(
+            width=800, height=200, toolbar_location=None, tools="tap", x_range=[]
+        )
+        self.figure['topic_assignment'].xaxis.major_label_orientation = pi/4
+
+        self.default_topic_assignment()
+
+        self.figure['topic_assignment'].line(
+            x='Term', y='Weight', source=self.source['topic_assignment'], line_width=4
+        )
 
 
     def predict_topics(self):

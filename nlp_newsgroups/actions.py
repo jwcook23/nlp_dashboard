@@ -44,6 +44,7 @@ class actions():
 
         self.default_samples()
         self.default_selections()
+        self.default_topic_assignment()
 
 
     def default_samples(self):
@@ -178,6 +179,16 @@ class actions():
         ]
 
         text = self.data_input[document_idx]
+
+        self.figure['topic_assignment'].title.text = f"Topic Term Importance: {', '.join(topics_number)}"
+        self.figure['topic_assignment'].x_range.factors = important_terms['Term'].tolist()
+        self.source['topic_assignment'].data = important_terms[['Term','Weight']].to_dict(orient='list')
+        idx = self.topic_color.transform.factors[
+            self.topic_color.transform.factors.isin(topics_number)
+        ].index[0]
+        topic_color = self.topic_color.transform.palette[idx]
+
+        self.figure['topic_assignment'].renderers[0].glyph.line_color = topic_color
 
         # TODO: show distribution of term importance
         self.set_samples(sample_title, text, important_terms['Term'])

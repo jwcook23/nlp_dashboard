@@ -1,11 +1,12 @@
 # bokeh serve --show nlp_newsgroups/dashboard.py
 
-# https://medium.com/plotly/nlp-visualisations-for-clear-immediate-insights-into-text-data-and-outputs-9ebfab168d5b
-# https://towardsdatascience.com/introduction-to-topic-modeling-using-scikit-learn-4c3f3290f5b9
-# https://scikit-learn.org/stable/auto_examples/text/plot_document_classification_20newsgroups.html#sphx-glr-auto-examples-text-plot-document-classification-20newsgroups-py
-
+# TODO: complaints data source
+# https://www.consumerfinance.gov/data-research/consumer-complaints/
 
 # TODO: ability to name topics
+# TODO: ability to lookup words (topics they are assigned to and their importance)
+# TODO: n-gram topic count in addition to document count (option to fit the above todo?)
+
 # TODO: compare topic models
 # TODO: named entity recognition
 # TODO: ngram for stopwords
@@ -57,7 +58,13 @@ class dashboard(plot):
                 column(
                     self.title['topics'],
                     Tabs(tabs=[
-                        TabPanel(child=self.figure['topics'], title='Topic Summary'),
+                        TabPanel(child=column(
+                            self.figure['topics'],
+                            row(
+                                column(self.input_topic_name, self.set_topic_name),
+                                self.figure['topic_assignment']
+                            )
+                        ), title='Topic Summary'),
                         TabPanel(
                             child=row(
                                 self.predict['calculate'],
