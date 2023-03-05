@@ -62,7 +62,7 @@ class dashboard(plot):
                             self.figure['topics'],
                             row(
                                 column(self.input_topic_name, self.set_topic_name),
-                                self.figure['topic_assignment']
+                                self.figure['topic_distribution']
                             )
                         ), title='Topic Summary'),
                         TabPanel(

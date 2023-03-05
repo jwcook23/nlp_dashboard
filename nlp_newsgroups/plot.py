@@ -40,7 +40,8 @@ class plot(data, model, actions):
         self.status_message = Div(text='')
 
         self.plot_ngram()
-        self.plot_topics()
+        self.plot_topics_terms()
+        self.plot_topics_distribution()
         self.plot_assignment()
         self.predict_topics()
         self.plot_samples()
@@ -124,7 +125,8 @@ class plot(data, model, actions):
     def default_figures(self):
 
         self.default_ngram()
-        self.default_topics()
+        self.default_topics_terms()
+        self.default_topics_distribution()
         self.default_topic_assignment()
         self.default_samples()
 
@@ -142,7 +144,7 @@ class plot(data, model, actions):
         self.figure['ngram'].y_range.factors = ngram['terms'].tolist()
 
 
-    def default_topics(self, top_num=10):
+    def topic_treemap(self, top_num=10):
 
         def treemap(df, col, x, y, dx, dy, *, N=100):
             sub_df = df.nlargest(N, col)
@@ -168,6 +170,13 @@ class plot(data, model, actions):
         source_data["ytop"] = source_data['y'] + source_data['dy']
         source_data = source_data.to_dict(orient='series')
 
+        return source_data, source_text
+
+
+    def default_topics_terms(self):
+
+        source_data, source_text = self.topic_treemap()
+
         self.source['topics'].data = source_data
         self.source['topic_number'].data = source_text.to_dict(orient='series')
 
@@ -175,12 +184,17 @@ class plot(data, model, actions):
         self.topic_color = factor_cmap("Topic", palette=Category10[10], factors=factors)
 
 
+    def default_topics_distribution(self):
+
+        self.figure['topic_distribution'].title.text = 'Topic Term Importance: select topic to display'
+        self.source['topic_distribution'].data = {'Term': [], 'Weight': []}
+
+
     def default_topic_assignment(self):
 
-        self.figure['topic_assignment'].title.text = 'Topic Term Importance: select topic to display'
         self.input_topic_name.title = 'Select to Rename'
         self.input_topic_name.value = ''
-        self.source['topic_assignment'].data = {'Term': [], 'Weight': []}
+        
 
 
     def plot_samples(self):
@@ -223,42 +237,50 @@ class plot(data, model, actions):
         self.source['ngram'].selected.on_change('indices', self.selected_ngram)
 
 
-    def plot_topics(self):
+    def plot_topics_terms(self):
 
         self.figure['topics'] = figure(
             width=950, height=300, toolbar_location=None,
             x_axis_location=None, y_axis_location=None, title='Topic Term Importance'
         )
-
-        self.source['topics'] = ColumnDataSource()
-        self.source['topic_number'] = ColumnDataSource()
-        self.default_topics()
-
         self.figure['topics'].x_range.range_padding = self.figure['topics'].y_range.range_padding = 0
         self.figure['topics'].grid.grid_line_color = None
+        self.source['topics'] = ColumnDataSource()
+        self.source['topic_number'] = ColumnDataSource()
+        
+        self.default_topics_terms()
 
         self.glyph['topic_term'] = self.figure['topics'].block(
             'x', 'y', 'dx', 'dy', source=self.source['topics'], line_width=1, line_color="white",
             fill_alpha=0.8, fill_color=self.topic_color
         )
+        hover_topic_term = HoverTool(renderers=[self.glyph['topic_term']], tooltips=[('Term', '@Term')])
+        self.figure['topics'].add_tools(hover_topic_term)
 
         self.glyph['topic_number'] = self.figure['topics'].text(
             'x', 'y', x_offset=2, text="Topic", source=self.source['topic_number'],
             text_font_size="18pt", text_color="white"
         )
+        hover_topic_number = HoverTool(renderers=[self.glyph['topic_number']], tooltips=[('Topic', '@Topic')])
+        self.figure['topics'].add_tools(hover_topic_number)
+        self.figure['topics'].add_tools(TapTool(renderers=[self.glyph['topic_number']]))
+        self.source['topic_number'].selected.on_change('indices', self.selected_topic)
 
         self.figure['topics'].text('x', 'ytop', x_offset=2, y_offset=2, text="Term", source=self.source['topics'],
             text_font_size="10pt", text_baseline="top",
         )
 
-        hover_topic_number = HoverTool(renderers=[self.glyph['topic_number']], tooltips=[('Topic', '@Topic')])
-        self.figure['topics'].add_tools(hover_topic_number)
 
-        hover_topic_term = HoverTool(renderers=[self.glyph['topic_term']], tooltips=[('Term', '@Term')])
-        self.figure['topics'].add_tools(hover_topic_term)
+    def plot_topics_distribution(self):
 
-        self.figure['topics'].add_tools(TapTool(renderers=[self.glyph['topic_number']]))
-        self.source['topic_number'].selected.on_change('indices', self.selected_topic)
+        self.figure['topic_distribution'] = figure(
+            width=800, height=200, toolbar_location=None, tools="tap", x_range=[]
+        )
+        self.figure['topic_distribution'].xaxis.major_label_orientation = pi/4
+        self.source['topic_distribution'] = ColumnDataSource({'Term': [], 'Weight': []})
+        self.figure['topic_distribution'].line(
+            x='Term', y='Weight', source=self.source['topic_distribution'], line_width=4
+        )
 
 
     def plot_assignment(self):
@@ -266,18 +288,6 @@ class plot(data, model, actions):
         self.input_topic_name = TextInput(value="", title="", width=125)
         self.set_topic_name = Button(label="Rename Topic", button_type="default", width=125)
         self.set_topic_name.on_event("button_click", self.rename_topic)
-
-        self.figure['topic_assignment'] = figure(
-            width=800, height=200, toolbar_location=None, tools="tap", x_range=[]
-        )
-        self.figure['topic_assignment'].xaxis.major_label_orientation = pi/4
-
-        self.source['topic_assignment'] = ColumnDataSource({'Term': [], 'Weight': []})
-        self.default_topic_assignment()
-
-        self.figure['topic_assignment'].line(
-            x='Term', y='Weight', source=self.source['topic_assignment'], line_width=4
-        )
 
 
     def predict_topics(self):
