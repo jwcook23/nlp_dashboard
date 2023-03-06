@@ -26,6 +26,7 @@ def test_selected_ngram(db):
 def test_selected_topic(db):
 
     db.selected_topic(None, None, new=[0])
+    db.get_topic_prediction(None)
 
 
 @pytest.mark.parametrize('db', [('rename_topic')], indirect=True)
@@ -39,7 +40,7 @@ def test_rename_topic(db):
 @pytest.mark.parametrize('db', [('get_topic_prediction')], indirect=True)
 def test_get_topic_prediction(db):
 
-    db.predict['input'].value = """football season is over. so I'll have more time to learn about my new mac"""
+    db.predict['input'].value = """Baseball season is over. so I'll have more time put my new hard drive in."""
     db.get_topic_prediction(None)
 
 

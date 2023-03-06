@@ -1,5 +1,3 @@
-import os
-import pickle
 from math import pi
 
 from bokeh.plotting import figure
@@ -11,13 +9,11 @@ from bokeh.transform import linear_cmap, factor_cmap
 from bokeh.palettes import Category10
 import pandas as pd
 from squarify import normalize_sizes, squarify
-from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
 from nlp_newsgroups.data import data
-from nlp_newsgroups.model import model
 from nlp_newsgroups.actions import actions
 
-class plot(data, model, actions):
+class plot(data, actions):
 
 
     def __init__(self):
@@ -49,13 +45,18 @@ class plot(data, model, actions):
 
     def user_inputs(self):
 
-        self.input_reset = Button(label="Reset Selections", button_type="success")
+        self.input_reset = Button(label="Reset Selections", button_type="success", width=150)
         self.input_reset.on_event("button_click", self.selected_reset)
 
-        self.input_recalculate = Button(label="Recalculate Models", button_type="danger")
+        self.input_recalculate = Button(label="Recalculate Models", button_type="danger", width=150)
         self.input_recalculate.on_event("button_click", self.recalculate_model)
         code = '{ alert("Recalculating Models! This may take a few minutes."); }'
         self.input_recalculate.js_on_click(CustomJS(code=code))
+
+        self.input_save = Button(label="Save Models", button_type="warning", width=150)
+        self.input_save.on_event("button_click", self.save_model)
+        code = '{ alert("Models Saved!"); }'
+        self.input_save.js_on_click(CustomJS(code=code))
 
         # BUG: initialize model with these values, recalcuate if needed
         token_pattern = [('(?u)\\b\\w\\w+\\b', '2 or more alphanumeric characters')]
@@ -66,7 +67,7 @@ class plot(data, model, actions):
                 title='Token Pattern',
                 width=250
             ),
-            'stop_words': TextInput(value="", title="Add Stopword", width=125),
+            'stop_words': TextInput(value="", title="Add Stopwords", width=125),
             'max_df': Slider(start=0.75, end=1.0, value=0.95, step=0.05, title='Max Doc. Freq.', width=125),
             'min_df': Slider(start=1, end=len(self.data_all), value=2, step=1, title='Min Doc. #', width=125),
             'num_features': NumericInput(value=1000, low=1000, high=10000, title='# Features', width=75),
@@ -81,41 +82,10 @@ class plot(data, model, actions):
         }
 
 
-    def model_cache(self, input_params={}):
-
-        file_name = 'model.pkl'
-        cache_exists = os.path.isfile(file_name)
-        params_changed = len(input_params)>0
-
-        if not cache_exists or input_params:
-
-            if not input_params:
-                input_params = {key:val.value for key,val in self.model_inputs.items()}
-                input_params['stop_words'] = list(ENGLISH_STOP_WORDS)
-
-            # BUG: check if slider parameters changed
-            model.__init__(self, **input_params)
-
-            self.get_ngram(self.data_input)
-            self.get_topics(self.data_input)
-
-            if params_changed:
-                self.default_figures()
-
-            # TODO: save new model changes
-            if not params_changed:
-                with open('model.pkl', 'wb') as _fh:
-                    pickle.dump([self.model_params, self.ngram, self.topic], _fh)
-    
-        else:
-            with open('model.pkl', 'rb') as _fh:
-                self.model_params, self.ngram, self.topic = pickle.load(_fh)
-
-
     def plot_titles(self):
 
         self.title = {
-            'main': Div(text=f'NLP Dashboard<br>{len(self.data_input):,} Documents', styles={'font-size': '150%', 'font-weight': 'bold'}, width=275),
+            'main': Div(text=f'NLP Dashboard<br>{len(self.data_input):,} Documents', styles={'font-size': '150%', 'font-weight': 'bold'}, width=175),
             'ngram': Div(text='Term Counts', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
             'topics': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
             'sample': Div(text='', styles={'font-weight': 'bold', 'font-size': '125%'}, width=250)
@@ -186,12 +156,10 @@ class plot(data, model, actions):
 
     def default_topics_distribution(self):
 
-        self.figure['topic_distribution'].title.text = 'Topic Term Importance: select topic to display'
+        self.figure['topic_distribution'].title.text = 'Topic Term Importance (all terms): select topic to display'
         if self.figure['topic_distribution'].renderers:
             self.figure['topic_distribution'].renderers = []
-            # self.figure['topic_distribution'].legend = []
-            self.figure['topic_distribution'].legend.destroy()
-            
+            self.figure['topic_distribution'].right = []
 
 
     def default_topic_assignment(self):
@@ -245,7 +213,7 @@ class plot(data, model, actions):
 
         self.figure['topics'] = figure(
             width=950, height=300, toolbar_location=None,
-            x_axis_location=None, y_axis_location=None, title='Topic Term Importance'
+            x_axis_location=None, y_axis_location=None, title='Topic Term Importance (top 10 terms)'
         )
         self.figure['topics'].x_range.range_padding = self.figure['topics'].y_range.range_padding = 0
         self.figure['topics'].grid.grid_line_color = None
@@ -278,7 +246,7 @@ class plot(data, model, actions):
     def plot_topics_distribution(self):
 
         self.figure['topic_distribution'] = figure(
-            width=950, height=200, toolbar_location=None, tools="tap", x_range=[]
+            width=950, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Importance'
         )
         self.figure['topic_distribution'].xaxis.major_label_orientation = pi/4
         self.default_topics_distribution()
@@ -286,8 +254,9 @@ class plot(data, model, actions):
 
     def plot_assignment(self):
 
+        self.input_topic_description = Div(text="*Select topic then assign new name.")
         self.input_topic_name = TextInput(value="", title="", width=125)
-        self.set_topic_name = Button(label="Rename Topic", button_type="default", width=125)
+        self.set_topic_name = Button(label="*Rename Topic", button_type="default", width=125)
         self.set_topic_name.on_event("button_click", self.rename_topic)
 
 
@@ -299,7 +268,7 @@ class plot(data, model, actions):
         self.predict['calculate'].on_event("button_click", self.get_topic_prediction)
 
         self.predict['input'] = TextAreaInput(
-            value="Football season is over. so I'll have more time put my new hard drive in.",
+            value="Baseball season is over. so I'll have more time put my new hard drive in.",
             width=300, height=250, title='Predict topic for input text.'
         )
 

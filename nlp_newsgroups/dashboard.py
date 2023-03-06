@@ -13,7 +13,7 @@
 
 from bokeh.plotting import curdoc, output_file, show
 from bokeh.layouts import row, column
-from bokeh.models import TabPanel, Tabs
+from bokeh.models import TabPanel, Tabs, Div
 
 from nlp_newsgroups.plot import plot
 
@@ -44,21 +44,25 @@ class dashboard(plot):
             key:val for key,val in self.model_inputs.items() 
             if key in ['topic_num', 'topic_approach']
         }
+        space = Div(width=10)
 
         self.layout = column(
             row(
-                column(self.title['main'], row(self.input_recalculate, self.input_reset)),
+                row(self.title['main'], column(self.input_recalculate, self.input_save, self.input_reset), space),
                 Tabs(tabs=[
                     TabPanel(child=row(*general_hyperparameters.values()), title='General Hyperparameters'),
-                    TabPanel(child=row(*topic_hyperparameters.values()), title='Topic Hyperparemeters')
+                    TabPanel(child=row(*topic_hyperparameters.values()), title='Topic Hyperparameters')
                 ])
             ),
             row(
                 column(self.title['ngram'], self.figure['ngram']),
                 column(
-                    row(self.title['topics'], self.set_topic_name, self.input_topic_name),
+                    self.title['topics'],
                     Tabs(tabs=[
-                        TabPanel(child=self.figure['topics'], title='Topic Summary'),
+                        TabPanel(child=column(
+                            row(self.set_topic_name, self.input_topic_name, self.input_topic_description),
+                            self.figure['topics']
+                        ), title='Topic Summary'),
                         TabPanel(
                             child=row(
                                 self.predict['calculate'],

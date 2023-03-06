@@ -1,12 +1,54 @@
 import re
+import os
+import pickle
 
 import pandas as pd
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+from bokeh.models import Legend
 
-class actions():
+from nlp_newsgroups.model import model
+
+class actions(model):
 
     def __init__(self):
 
-        pass
+        self.model_file_name = 'model.pkl'
+
+
+    def model_cache(self, input_params={}):
+
+        cache_exists = os.path.isfile(self.model_file_name)
+        params_changed = len(input_params)>0
+
+        if not cache_exists or input_params:
+
+            if not input_params:
+                input_params = {key:val.value for key,val in self.model_inputs.items()}
+                input_params['stop_words'] = list(ENGLISH_STOP_WORDS)
+
+            # BUG: check if slider parameters changed
+            model.__init__(self, **input_params)
+
+            self.get_ngram(self.data_input)
+            self.get_topics(self.data_input)
+
+            if params_changed:
+                self.default_figures()
+
+            # TODO: save new model changes
+            if not params_changed:
+                self.save_model(None)
+    
+        else:
+            with open(self.model_file_name, 'rb') as _fh:
+                self.model_params, self.ngram, self.topic = pickle.load(_fh)
+
+
+    def save_model(self, event):
+
+        with open(self.model_file_name, 'wb') as _fh:
+            pickle.dump([self.model_params, self.ngram, self.topic], _fh)
+
 
     def set_status(self, message):
 
@@ -23,7 +65,9 @@ class actions():
 
         input_params = {key: val.value for key,val in self.model_inputs.items()}
         
-        input_params['stop_words'] = self.model_params['stop_words']+[input_params['stop_words'].strip().lower()]
+        stopwords = input_params['stop_words'].split(',')
+        stopwords = [word.strip().lower() for word in stopwords]
+        input_params['stop_words'] = self.model_params['stop_words']+stopwords
 
         change_params = [key for key,val in input_params.items() if val!= self.model_params[key]]
         change_params = [self.model_inputs[key].title for key in change_params]
@@ -141,6 +185,7 @@ class actions():
     def get_topic_prediction(self, event):
 
         self.default_selections()
+        self.default_topics_distribution()
 
         text = pd.Series([self.predict['input'].value])
 
@@ -188,11 +233,12 @@ class actions():
 
         # important_terms = important_terms.sort_values(by=['Topic','Weight'], ascending=[True, False])
 
-        self.figure['topic_distribution'].title.text = f"Topic Term Importance: {title_text}"
+        self.figure['topic_distribution'].title.text = f"Topic Term Importance (all terms): {title_text}"
         factors = important_terms['Term'].drop_duplicates().tolist()
         self.figure['topic_distribution'].x_range.factors = factors
 
         topics = important_terms['Topic'].drop_duplicates()
+        legend = []
         for topic_number in topics.values:
             
             source = important_terms.loc[
@@ -205,14 +251,16 @@ class actions():
             ].index[0]
             topic_color = self.topic_color.transform.palette[idx]
             
-            self.figure['topic_distribution'].line(
-                x='Term', y='Weight', source=source, line_width=4, line_color=topic_color,
-                legend_label=topic_number
+            render_line = self.figure['topic_distribution'].line(
+                x='Term', y='Weight', source=source, line_width=4, line_color=topic_color
             )
-            self.figure['topic_distribution'].square(
-                x='Term', y='Weight', source=source, size=10, fill_color=topic_color, line_color=None,
-                legend_label=topic_number
+            render_point = self.figure['topic_distribution'].square(
+                x='Term', y='Weight', source=source, size=10, fill_color=topic_color, line_color=None
             )
+            legend += [(topic_number, [render_line, render_point])]
+
+        legend = Legend(items=legend, title='Topic')
+        self.figure['topic_distribution'].add_layout(legend, 'right')
 
 
     def selected_topic(self, attr, old, new):
@@ -222,8 +270,6 @@ class actions():
             return
         
         self.default_selections(ignore='topics')
-
-        sample_title = self.title['topics'].text
 
         self.topic_number = self.source['topic_number'].data['Topic'].iloc[new].values[0]
 
@@ -240,5 +286,4 @@ class actions():
 
         self.set_topics_distribution(self.topic_number, important_terms)
 
-        # TODO: show distribution of term importance
-        self.set_samples(sample_title, text, important_terms['Term'])
+        self.set_samples(f'Selected Topic = {self.topic_number}', text, important_terms['Term'])
