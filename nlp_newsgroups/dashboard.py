@@ -56,15 +56,9 @@ class dashboard(plot):
             row(
                 column(self.title['ngram'], self.figure['ngram']),
                 column(
-                    self.title['topics'],
+                    row(self.title['topics'], self.set_topic_name, self.input_topic_name),
                     Tabs(tabs=[
-                        TabPanel(child=column(
-                            self.figure['topics'],
-                            row(
-                                column(self.input_topic_name, self.set_topic_name),
-                                self.figure['topic_distribution']
-                            )
-                        ), title='Topic Summary'),
+                        TabPanel(child=self.figure['topics'], title='Topic Summary'),
                         TabPanel(
                             child=row(
                                 self.predict['calculate'],
@@ -73,7 +67,8 @@ class dashboard(plot):
                             ),
                             title='Topic Prediction'
                         )
-                    ])
+                    ]),
+                    self.figure['topic_distribution']
                 )
             ),
             column(

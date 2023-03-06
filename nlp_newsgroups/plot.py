@@ -187,7 +187,11 @@ class plot(data, model, actions):
     def default_topics_distribution(self):
 
         self.figure['topic_distribution'].title.text = 'Topic Term Importance: select topic to display'
-        self.source['topic_distribution'].data = {'Term': [], 'Weight': []}
+        if self.figure['topic_distribution'].renderers:
+            self.figure['topic_distribution'].renderers = []
+            # self.figure['topic_distribution'].legend = []
+            self.figure['topic_distribution'].legend.destroy()
+            
 
 
     def default_topic_assignment(self):
@@ -274,13 +278,10 @@ class plot(data, model, actions):
     def plot_topics_distribution(self):
 
         self.figure['topic_distribution'] = figure(
-            width=800, height=200, toolbar_location=None, tools="tap", x_range=[]
+            width=950, height=200, toolbar_location=None, tools="tap", x_range=[]
         )
         self.figure['topic_distribution'].xaxis.major_label_orientation = pi/4
-        self.source['topic_distribution'] = ColumnDataSource({'Term': [], 'Weight': []})
-        self.figure['topic_distribution'].line(
-            x='Term', y='Weight', source=self.source['topic_distribution'], line_width=4
-        )
+        self.default_topics_distribution()
 
 
     def plot_assignment(self):

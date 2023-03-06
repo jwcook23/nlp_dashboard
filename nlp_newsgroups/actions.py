@@ -152,7 +152,6 @@ class actions():
 
         predicted_topic = distribution.loc[distribution['Confidence']>0, 'Topic']
         
-        # TODO: show distribution of term importance
         idx = features.nonzero()[1]
         important_terms = pd.DataFrame({
             'Topic': [predicted_topic]*len(idx),
@@ -161,6 +160,10 @@ class actions():
         important_terms = important_terms.explode('Topic')
         important_terms = important_terms.merge(self.topic['summary'], on=['Topic','Term'])
         important_terms = important_terms[important_terms['Weight']>0]
+
+        topics = important_terms['Topic'].drop_duplicates()
+        topics = f"Predicted Topics {', '.join(topics)}"
+        self.set_topics_distribution(topics, important_terms)
         
         self.set_samples('Topic Prediction', text, important_terms['Term'])
 
@@ -179,6 +182,37 @@ class actions():
         self.glyph['topic_term'].glyph.fill_color = self.topic_color
         self.default_topic_assignment()
         self.default_selections()
+
+
+    def set_topics_distribution(self, title_text, important_terms):
+
+        # important_terms = important_terms.sort_values(by=['Topic','Weight'], ascending=[True, False])
+
+        self.figure['topic_distribution'].title.text = f"Topic Term Importance: {title_text}"
+        factors = important_terms['Term'].drop_duplicates().tolist()
+        self.figure['topic_distribution'].x_range.factors = factors
+
+        topics = important_terms['Topic'].drop_duplicates()
+        for topic_number in topics.values:
+            
+            source = important_terms.loc[
+                important_terms['Topic']==topic_number,
+                ['Term', 'Weight']
+            ].to_dict(orient='list')
+            
+            idx = self.topic_color.transform.factors[
+                self.topic_color.transform.factors==topic_number
+            ].index[0]
+            topic_color = self.topic_color.transform.palette[idx]
+            
+            self.figure['topic_distribution'].line(
+                x='Term', y='Weight', source=source, line_width=4, line_color=topic_color,
+                legend_label=topic_number
+            )
+            self.figure['topic_distribution'].square(
+                x='Term', y='Weight', source=source, size=10, fill_color=topic_color, line_color=None,
+                legend_label=topic_number
+            )
 
 
     def selected_topic(self, attr, old, new):
@@ -204,16 +238,7 @@ class actions():
 
         text = self.data_input[document_idx]
 
-        self.figure['topic_distribution'].title.text = f"Topic Term Importance: {self.topic_number}"
-        self.input_topic_name.title = self.topic_number
-        self.source['topic_distribution'].data = important_terms[['Term','Weight']].to_dict(orient='list')
-        self.figure['topic_distribution'].x_range.factors = important_terms['Term'].tolist()
-        idx = self.topic_color.transform.factors[
-            self.topic_color.transform.factors==self.topic_number
-        ].index[0]
-        topic_color = self.topic_color.transform.palette[idx]
-
-        self.figure['topic_distribution'].renderers[0].glyph.line_color = topic_color
+        self.set_topics_distribution(self.topic_number, important_terms)
 
         # TODO: show distribution of term importance
         self.set_samples(sample_title, text, important_terms['Term'])
