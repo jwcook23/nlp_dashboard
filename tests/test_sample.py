@@ -34,6 +34,8 @@ def test_rename_topic(db):
     db.selected_topic(None, None, new=[0])
     db.input_topic_name.value = 'Topic Renamed'
     db.rename_topic(None)
+    db.selected_topic(None, None, new=[1])
+    db.selected_topic(None, None, new=[0])
 
 
 @pytest.mark.parametrize('db', [('get_topic_prediction')], indirect=True)

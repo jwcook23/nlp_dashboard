@@ -180,6 +180,7 @@ class actions(model):
         self.predict['figure'].y_range.factors = self.topic['name']
         
         self.topic['summary']['Topic'] = self.topic['summary']['Topic'].replace(self.topic_number, new_name)
+        self.topic['Distribution']['Topic'] = self.topic['Distribution']['Topic'].replace(self.topic_number, new_name)
         self.glyph['topic_term'].glyph.fill_color = self.topic_color
 
         self.default_figures(None)
