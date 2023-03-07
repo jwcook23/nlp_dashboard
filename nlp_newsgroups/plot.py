@@ -89,6 +89,7 @@ class plot(data, actions, default):
             'main': Div(text=f'NLP Dashboard<br>{len(self.data_input):,} Documents', styles={'font-size': '150%', 'font-weight': 'bold'}, width=175),
             'ngram': Div(text='Term Counts', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
             'topics': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
+            'topic_distribution': Div(text='Selected Topic Term Importance (all terms)', styles={'font-weight': 'bold'}, width=275),
             'sample': Div(text='', styles={'font-weight': 'bold', 'font-size': '125%'}, width=250)
         }
 
@@ -203,9 +204,11 @@ class plot(data, actions, default):
     def plot_topics_distribution(self):
 
         self.figure['topic_distribution'] = figure(
-            width=950, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Importance'
+            width=950, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Importance', title=''
         )
         self.figure['topic_distribution'].xaxis.major_label_orientation = pi/4
+        self.input_topic_distribution_range = RangeSlider(start=1, end=2, value=(1,2), step=1, title='# Terms Displayed', width=125)
+        self.input_topic_distribution_range.on_change('value', self.set_topics_distribution_range)
         self.default_topics_distribution()
 
 

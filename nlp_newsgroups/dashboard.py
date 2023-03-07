@@ -72,7 +72,10 @@ class dashboard(plot):
                             title='Topic Prediction'
                         )
                     ]),
-                    self.figure['topic_distribution']
+                    column(
+                        row(self.title['topic_distribution'], self.input_topic_distribution_range), 
+                        self.figure['topic_distribution']
+                    )
                 )
             ),
             column(

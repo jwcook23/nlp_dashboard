@@ -75,7 +75,6 @@ class default():
 
     def default_topics_distribution(self):
 
-        self.figure['topic_distribution'].title.text = 'Topic Term Importance (all terms): select topic to display'
         self.figure['topic_distribution'].x_range.factors = []
         if self.figure['topic_distribution'].renderers:
             self.figure['topic_distribution'].renderers = []

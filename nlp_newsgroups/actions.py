@@ -1,6 +1,7 @@
 import re
 import os
 import pickle
+from math import floor, ceil
 
 import pandas as pd
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
@@ -185,12 +186,19 @@ class actions(model):
 
         self.default_figures(None)
 
+    
+    def set_topics_distribution_range(self, attr, old, new):
+
+        start = floor(new[0])
+        end = ceil(new[1])
+
+        self.figure['topic_distribution'].x_range.factors = self.topic_distribution_factors[start:end]
+
 
     def set_topics_distribution(self, title_text, important_terms):
 
-        self.figure['topic_distribution'].title.text = f"Topic Term Importance (all terms): {title_text}"
-        factors = important_terms['Term'].drop_duplicates().tolist()
-        self.figure['topic_distribution'].x_range.factors = factors
+        self.topic_distribution_factors = important_terms['Term'].drop_duplicates().tolist()
+        self.figure['topic_distribution'].x_range.factors = self.topic_distribution_factors
 
         if self.figure['topic_distribution'].renderers:
             self.figure['topic_distribution'].right = []
@@ -219,6 +227,9 @@ class actions(model):
 
         legend = Legend(items=legend, title='Topic')
         self.figure['topic_distribution'].add_layout(legend, 'right')
+
+        self.input_topic_distribution_range.end = len(self.topic_distribution_factors)
+        self.input_topic_distribution_range.value = (1, min(self.input_topic_distribution_range.end, 25))
 
 
     def selected_topic(self, attr, old, new):
