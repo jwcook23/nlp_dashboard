@@ -61,7 +61,7 @@ class actions(model):
         # message = "Recalculating Models! This may take a few minutes."
         # self.popup_alert(message)
 
-        self.selected_reset(None)
+        self.reset_selected(None)
 
         input_params = {key: val.value for key,val in self.model_inputs.items()}
         
@@ -83,7 +83,7 @@ class actions(model):
             self.model_cache(input_params)
 
 
-    def selected_reset(self, event):
+    def reset_selected(self, event):
 
         self.default_samples()
         self.default_selections()
@@ -223,10 +223,9 @@ class actions(model):
         
         self.topic['summary']['Topic'] = self.topic['summary']['Topic'].replace(self.topic_number, new_name)
         self.default_topics_terms()
-        self.default_topics_distribution()
         self.glyph['topic_term'].glyph.fill_color = self.topic_color
-        self.default_topic_assignment()
-        self.default_selections()
+
+        self.reset_selected(None)
 
 
     def set_topics_distribution(self, title_text, important_terms):

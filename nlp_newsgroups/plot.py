@@ -46,7 +46,7 @@ class plot(data, actions):
     def user_inputs(self):
 
         self.input_reset = Button(label="Reset Selections", button_type="success", width=150)
-        self.input_reset.on_event("button_click", self.selected_reset)
+        self.input_reset.on_event("button_click", self.reset_selected)
 
         self.input_recalculate = Button(label="Recalculate Models", button_type="danger", width=150)
         self.input_recalculate.on_event("button_click", self.recalculate_model)
@@ -157,6 +157,7 @@ class plot(data, actions):
     def default_topics_distribution(self):
 
         self.figure['topic_distribution'].title.text = 'Topic Term Importance (all terms): select topic to display'
+        self.figure['topic_distribution'].x_range.factors = []
         if self.figure['topic_distribution'].renderers:
             self.figure['topic_distribution'].renderers = []
             self.figure['topic_distribution'].right = []
