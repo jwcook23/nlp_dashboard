@@ -124,6 +124,9 @@ class actions(model):
 
 
     def selected_ngram(self, attr, old, new):
+
+        if len(new)==0:
+            return
         
         self.default_selections(ignore='ngram')
 
@@ -219,7 +222,10 @@ class actions(model):
 
     def selected_topic(self, attr, old, new):
         
-        self.default_selections(ignore='topics')
+        if len(new)==0:
+            return
+
+        self.default_selections(ignore='topic_number')
 
         self.topic_number = self.source['topic_number'].data['Topic'].iloc[new].values[0]
 
