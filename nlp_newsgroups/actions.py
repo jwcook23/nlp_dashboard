@@ -33,7 +33,7 @@ class actions(model):
             self.get_topics(self.data_input)
 
             if params_changed:
-                self.default_figures()
+                self.default_figures(None)
 
             # TODO: save new model changes
             if not params_changed:
@@ -58,11 +58,6 @@ class actions(model):
 
     def recalculate_model(self, event):
 
-        # message = "Recalculating Models! This may take a few minutes."
-        # self.popup_alert(message)
-
-        self.reset_selected(None)
-
         input_params = {key: val.value for key,val in self.model_inputs.items()}
         
         stopwords = input_params['stop_words'].split(',')
@@ -75,44 +70,9 @@ class actions(model):
 
         if change_params:
 
-            # message = f"Recalculating model with new parameters for: {change_params}"
-            # self.set_status(message)
-
             self.model_inputs['stop_words'].value = ""
 
             self.model_cache(input_params)
-
-
-    def reset_selected(self, event):
-
-        self.default_samples()
-        self.default_selections()
-        self.default_topics_distribution()
-        self.default_topic_assignment()
-
-
-    def default_samples(self):
-
-        self.title['sample'].text ='Example Documents'
-        self.sample_number.title = 'Document Sample #: make selection'
-        self.sample_legend.text = ''
-        self.sample_document.text = ''
-        self.sample_number.value = 0
-        self.sample_number.high = 1
-        self.sample_text = None
-
-
-    def default_selections(self, ignore=None):
-
-        self.sample_number.value = 0
-        self.topic_number = None
-
-        reset = list(self.source.keys())
-        if ignore is not None:
-            reset.remove(ignore)
-
-        for source in reset:
-            self.source[source].selected.indices = []
 
 
     def set_samples(self, sample_title, text, important_terms):
@@ -164,10 +124,6 @@ class actions(model):
 
 
     def selected_ngram(self, attr, old, new):
-
-        if len(new) == 0:
-            self.default_samples()
-            return
         
         self.default_selections(ignore='ngram')
 
@@ -185,7 +141,6 @@ class actions(model):
     def get_topic_prediction(self, event):
 
         self.default_selections()
-        self.default_topics_distribution()
 
         text = pd.Series([self.predict['input'].value])
 
@@ -222,19 +177,19 @@ class actions(model):
         self.predict['figure'].y_range.factors = self.topic['name']
         
         self.topic['summary']['Topic'] = self.topic['summary']['Topic'].replace(self.topic_number, new_name)
-        self.default_topics_terms()
         self.glyph['topic_term'].glyph.fill_color = self.topic_color
 
-        self.reset_selected(None)
+        self.default_figures(None)
 
 
     def set_topics_distribution(self, title_text, important_terms):
 
-        # important_terms = important_terms.sort_values(by=['Topic','Weight'], ascending=[True, False])
-
         self.figure['topic_distribution'].title.text = f"Topic Term Importance (all terms): {title_text}"
         factors = important_terms['Term'].drop_duplicates().tolist()
         self.figure['topic_distribution'].x_range.factors = factors
+
+        if self.figure['topic_distribution'].renderers:
+            self.figure['topic_distribution'].right = []
 
         topics = important_terms['Topic'].drop_duplicates()
         legend = []
@@ -263,10 +218,6 @@ class actions(model):
 
 
     def selected_topic(self, attr, old, new):
-
-        if len(new) == 0:
-            self.default_samples()
-            return
         
         self.default_selections(ignore='topics')
 

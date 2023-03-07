@@ -5,20 +5,21 @@ from bokeh.models import (
     Div, ColumnDataSource, Spinner, ColorBar, Button, TextInput, CustomJS,
     Slider, RangeSlider, NumericInput, Select, TextAreaInput, TapTool, HoverTool
 )
-from bokeh.transform import linear_cmap, factor_cmap
-from bokeh.palettes import Category10
+from bokeh.transform import linear_cmap
 import pandas as pd
 from squarify import normalize_sizes, squarify
 
 from nlp_newsgroups.data import data
 from nlp_newsgroups.actions import actions
+from nlp_newsgroups.default import default
 
-class plot(data, actions):
+class plot(data, actions, default):
 
 
     def __init__(self):
 
         data.__init__(self)
+        default.__init__(self)
         actions.__init__(self)
 
         self.data_input = self.data_all['text']
@@ -46,7 +47,7 @@ class plot(data, actions):
     def user_inputs(self):
 
         self.input_reset = Button(label="Reset Selections", button_type="success", width=150)
-        self.input_reset.on_event("button_click", self.reset_selected)
+        self.input_reset.on_event("button_click", self.default_figures)
 
         self.input_recalculate = Button(label="Recalculate Models", button_type="danger", width=150)
         self.input_recalculate.on_event("button_click", self.recalculate_model)
@@ -92,26 +93,7 @@ class plot(data, actions):
         }
 
 
-    def default_figures(self):
 
-        self.default_ngram()
-        self.default_topics_terms()
-        self.default_topics_distribution()
-        self.default_topic_assignment()
-        self.default_samples()
-
-
-    def default_ngram(self, top_num=25):
-
-        ngram = self.ngram['summary'].head(top_num)
-
-        self.source['ngram'].data = {
-            'Terms': ngram['terms'],
-            'Term Count': ngram['term_count'],
-            'Document Count': ngram['document_count']
-        }
-
-        self.figure['ngram'].y_range.factors = ngram['terms'].tolist()
 
 
     def topic_treemap(self, top_num=10):
@@ -141,32 +123,6 @@ class plot(data, actions):
         source_data = source_data.to_dict(orient='series')
 
         return source_data, source_text
-
-
-    def default_topics_terms(self):
-
-        source_data, source_text = self.topic_treemap()
-
-        self.source['topics'].data = source_data
-        self.source['topic_number'].data = source_text.to_dict(orient='series')
-
-        factors = self.source['topics'].data['Topic'].drop_duplicates().reset_index(drop=True)
-        self.topic_color = factor_cmap("Topic", palette=Category10[10], factors=factors)
-
-
-    def default_topics_distribution(self):
-
-        self.figure['topic_distribution'].title.text = 'Topic Term Importance (all terms): select topic to display'
-        self.figure['topic_distribution'].x_range.factors = []
-        if self.figure['topic_distribution'].renderers:
-            self.figure['topic_distribution'].renderers = []
-            self.figure['topic_distribution'].right = []
-
-
-    def default_topic_assignment(self):
-
-        self.input_topic_name.title = 'Select to Rename'
-        self.input_topic_name.value = ''
         
 
 
