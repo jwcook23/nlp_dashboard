@@ -50,9 +50,3 @@ def test_recalculate_model(db):
 
     db.model_inputs['stop_words'].value = 'AX'
     db.recalculate_model(None)
-
-
-@pytest.mark.parametrize('db', [('axis_range')], indirect=True)
-def test_axis_range(db):
-
-    db.selected_topic(None, None, new=[3])

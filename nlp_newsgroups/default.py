@@ -1,4 +1,6 @@
-from bokeh.transform import linear_cmap, factor_cmap
+from math import floor, ceil
+
+from bokeh.transform import factor_cmap
 from bokeh.palettes import Category10
 
 class default():
@@ -43,9 +45,17 @@ class default():
         self.sample_text = None
 
 
-    def default_ngram(self, top_num=25):
+    def set_ngram_range(self, attr, old, new):
 
-        ngram = self.ngram['summary'].head(top_num)
+        start = floor(new)
+        end = ceil(new)+min(self.input_ngram_range.end, 25)
+
+        self.figure['ngram'].y_range.factors = self.ngram_factors[start:end]
+        self.figure['ngram'].yaxis[0].axis_label = f'Terms {start}-{end-1}'
+
+    def default_ngram(self):
+
+        ngram = self.ngram['summary']
 
         self.source['ngram'].data = {
             'Terms': ngram['terms'],
@@ -53,7 +63,10 @@ class default():
             'Document Count': ngram['document_count']
         }
 
-        self.figure['ngram'].y_range.factors = ngram['terms'].tolist()
+        self.ngram_factors = ngram['terms'].tolist()
+
+        self.input_ngram_range.end = len(self.ngram_factors)
+        self.set_ngram_range(None, None, self.input_ngram_range.value)
 
 
     def default_topic_assignment(self):

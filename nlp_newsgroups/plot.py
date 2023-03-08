@@ -87,14 +87,11 @@ class plot(data, actions, default):
 
         self.title = {
             'main': Div(text=f'NLP Dashboard<br>{len(self.data_input):,} Documents', styles={'font-size': '150%', 'font-weight': 'bold'}, width=175),
-            'ngram': Div(text='Term Counts', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
+            'ngram': Div(text='Term Counts', styles={'font-size': '125%', 'font-weight': 'bold'}, width=125),
             'topics': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
             'topic_distribution': Div(text='Selected Topic Term Importance (all terms)', styles={'font-weight': 'bold'}, width=275),
             'sample': Div(text='', styles={'font-weight': 'bold', 'font-size': '125%'}, width=250)
         }
-
-
-
 
 
     def topic_treemap(self, top_num=10):
@@ -145,9 +142,12 @@ class plot(data, actions, default):
 
         self.figure['ngram'] = figure(
             height=500, width=350, toolbar_location=None, tools="tap", tooltips="Document Count = @{Document Count}",
-            x_axis_label='Term Count', y_axis_label='Term', y_range=[]
+            x_axis_label='Term Count', y_range=[]
         )
-        self.figure['ngram'].xaxis.major_label_orientation = pi/4
+        self.figure['ngram'].xaxis.major_label_orientation = pi/8
+
+        self.input_ngram_range = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
+        self.input_ngram_range.on_change('value', self.set_ngram_range)
 
         self.source['ngram'] = ColumnDataSource()
         self.default_ngram()
@@ -206,8 +206,8 @@ class plot(data, actions, default):
         self.figure['topic_distribution'] = figure(
             width=950, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Importance', title=''
         )
-        self.figure['topic_distribution'].xaxis.major_label_orientation = pi/4
-        self.input_topic_distribution_range = RangeSlider(start=1, end=2, value=(1,2), step=1, title='# Terms Displayed', width=125)
+        self.figure['topic_distribution'].xaxis.major_label_orientation = pi/8
+        self.input_topic_distribution_range = RangeSlider(start=1, end=2, value=(1,2), step=1, title='Term Range Displayed', width=125)
         self.input_topic_distribution_range.on_change('value', self.set_topics_distribution_range)
         self.default_topics_distribution()
 

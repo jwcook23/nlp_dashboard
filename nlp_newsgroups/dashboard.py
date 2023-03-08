@@ -55,7 +55,10 @@ class dashboard(plot):
                 ])
             ),
             row(
-                column(self.title['ngram'], self.figure['ngram']),
+                column(
+                    row(self.title['ngram'], self.input_ngram_range), 
+                    self.figure['ngram']
+                ),
                 column(
                     self.title['topics'],
                     Tabs(tabs=[

@@ -192,7 +192,8 @@ class actions(model):
         start = floor(new[0])
         end = ceil(new[1])
 
-        self.figure['topic_distribution'].x_range.factors = self.topic_distribution_factors[start:end]
+        self.figure['topic_distribution'].x_range.factors = self.topic_distribution_factors[start:end+1]
+        self.figure['topic_distribution'].xaxis[0].axis_label = f'Terms {start}-{end}'
 
 
     def set_topics_distribution(self, title_text, important_terms):
@@ -230,6 +231,7 @@ class actions(model):
 
         self.input_topic_distribution_range.end = len(self.topic_distribution_factors)
         self.input_topic_distribution_range.value = (1, min(self.input_topic_distribution_range.end, 25))
+        self.set_topics_distribution_range(None, None, self.input_topic_distribution_range.value)
 
 
     def selected_topic(self, attr, old, new):
