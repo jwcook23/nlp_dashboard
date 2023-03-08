@@ -1,4 +1,5 @@
 from math import pi
+from typing import Literal
 
 from bokeh.plotting import figure
 from bokeh.models import (
@@ -36,7 +37,8 @@ class plot(data, actions, default):
         
         self.status_message = Div(text='')
 
-        self.plot_ngram()
+        self.plot_term('ngram')
+        self.plot_term('entity')
         self.plot_topics_terms()
         self.plot_topics_distribution()
         self.plot_assignment()
@@ -87,7 +89,7 @@ class plot(data, actions, default):
 
         self.title = {
             'main': Div(text=f'NLP Dashboard<br>{len(self.data_input):,} Documents', styles={'font-size': '150%', 'font-weight': 'bold'}, width=175),
-            'ngram': Div(text='Term Counts', styles={'font-size': '125%', 'font-weight': 'bold'}, width=125),
+            'terms': Div(text='Term/Entity Counts', styles={'font-size': '125%', 'font-weight': 'bold'}, width=150),
             'topics': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
             'topic_distribution': Div(text='Selected Topic Term Importance (all terms)', styles={'font-weight': 'bold'}, width=275),
             'sample': Div(text='', styles={'font-weight': 'bold', 'font-size': '125%'}, width=250)
@@ -138,33 +140,38 @@ class plot(data, actions, default):
         self.default_samples()
 
 
-    def plot_ngram(self):
+    def plot_term(self, source: Literal = ['ngram','entity']):
 
-        self.figure['ngram'] = figure(
-            height=500, width=350, toolbar_location=None, tools="tap", tooltips="Document Count = @{Document Count}",
+        self.figure[source] = figure(
+            height=550, width=350, toolbar_location=None, tools="tap", tooltips="Document Count = @{Document Count}",
             x_axis_label='Term Count', y_range=[]
         )
-        self.figure['ngram'].xaxis.major_label_orientation = pi/8
+        self.figure[source].xaxis.major_label_orientation = pi/8
 
-        self.input_ngram_range = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
-        self.input_ngram_range.on_change('value', self.set_ngram_range)
-
-        self.source['ngram'] = ColumnDataSource()
-        self.default_ngram()
+        self.source[source] = ColumnDataSource()
+        # TODO: shared functionality
+        if source=='ngram':
+            self.input_ngram_range = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
+            self.input_ngram_range.on_change('value', self.set_ngram_range)
+            self.default_ngram()
+        elif source=='entity':
+            self.input_entity_range = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
+            self.input_entity_range.on_change('value', self.set_entity_range)
+            self.default_entity()
 
         cmap = linear_cmap(
             field_name='Document Count', palette='Turbo256', 
-            low=min(self.source['ngram'].data['Document Count']), high=max(self.source['ngram'].data['Document Count'])
+            low=min(self.source[source].data['Document Count']), high=max(self.source[source].data['Document Count'])
         )
         color_bar = ColorBar(color_mapper=cmap['transform'], title='Document Count')
 
-        self.figure['ngram'].hbar(
+        self.figure[source].hbar(
             y='Terms', right='Term Count',
-            source=self.source['ngram'], width=0.9, fill_color=cmap, line_color=None
+            source=self.source[source], width=0.9, fill_color=cmap, line_color=None
         )
-        self.figure['ngram'].add_layout(color_bar, 'right')   
+        self.figure[source].add_layout(color_bar, 'right')   
 
-        self.source['ngram'].selected.on_change('indices', self.selected_ngram)
+        self.source[source].selected.on_change('indices', self.selected_ngram)
 
 
     def plot_topics_terms(self):

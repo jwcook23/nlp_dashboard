@@ -53,6 +53,7 @@ class default():
         self.figure['ngram'].y_range.factors = self.ngram_factors[start:end]
         self.figure['ngram'].yaxis[0].axis_label = f'Terms {start}-{end-1}'
 
+
     def default_ngram(self):
 
         ngram = self.ngram['summary']
@@ -67,6 +68,31 @@ class default():
 
         self.input_ngram_range.end = len(self.ngram_factors)
         self.set_ngram_range(None, None, self.input_ngram_range.value)
+
+
+    def set_entity_range(self, attr, old, new):
+
+        start = floor(new)
+        end = ceil(new)+min(self.input_entity_range.end, 25)
+
+        self.figure['entity'].y_range.factors = self.entity_factors[start:end]
+        self.figure['entity'].yaxis[0].axis_label = f'Terms {start}-{end-1}'
+
+
+    def default_entity(self):
+
+        entity = self.entity['summary']
+
+        self.source['entity'].data = {
+            'Terms': entity['entity_clean'],
+            'Term Count': entity['entity_count'],
+            'Document Count': entity['document_count']
+        }
+
+        self.entity_factors = entity['entity_clean'].tolist()
+
+        self.input_entity_range.end = len(self.entity_factors)
+        self.set_entity_range(None, None, self.input_entity_range.value)
 
 
     def default_topic_assignment(self):

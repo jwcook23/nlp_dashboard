@@ -56,8 +56,11 @@ class dashboard(plot):
             ),
             row(
                 column(
-                    row(self.title['ngram'], self.input_ngram_range), 
-                    self.figure['ngram']
+                    self.title['terms'],
+                    Tabs(tabs=[
+                        TabPanel(child=column(self.input_ngram_range, self.figure['ngram']), title='Term Count'),
+                        TabPanel(child=column(self.input_entity_range, self.figure['entity']), title='Entity Count'),
+                    ])
                 ),
                 column(
                     self.title['topics'],

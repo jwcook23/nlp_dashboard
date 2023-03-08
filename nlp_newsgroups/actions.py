@@ -13,12 +13,25 @@ class actions(model):
 
     def __init__(self):
 
-        self.model_file_name = 'model.pkl'
+        self.model_topic_fname = 'model_topic.pkl'
+        self.model_ner_fname = 'model_ner.pkl'
+
+        # TODO: build handling for NER
+        with open(self.model_ner_fname, 'rb') as _fh:
+            terms, summary = pickle.load(_fh)
+
+            # TODO: display by label type
+            summary = summary.groupby('entity_clean')
+            summary = summary.agg({'entity_count': sum, 'document_count': sum})
+            summary = summary.reset_index()
+            summary = summary.sort_values(by='entity_count', ascending=False)
+
+            self.entity = {'terms': terms, 'summary': summary}
 
 
     def model_cache(self, input_params={}):
 
-        cache_exists = os.path.isfile(self.model_file_name)
+        cache_exists = os.path.isfile(self.model_topic_fname)
         params_changed = len(input_params)>0
 
         if not cache_exists or input_params:
@@ -41,13 +54,13 @@ class actions(model):
                 self.save_model(None)
     
         else:
-            with open(self.model_file_name, 'rb') as _fh:
+            with open(self.model_topic_fname, 'rb') as _fh:
                 self.model_params, self.ngram, self.topic = pickle.load(_fh)
 
 
     def save_model(self, event):
 
-        with open(self.model_file_name, 'wb') as _fh:
+        with open(self.model_topic_fname, 'wb') as _fh:
             pickle.dump([self.model_params, self.ngram, self.topic], _fh)
 
 
@@ -131,7 +144,7 @@ class actions(model):
         
         self.default_selections(ignore='ngram')
 
-        sample_title = self.title['ngram'].text
+        sample_title = self.title['terms'].text
         important_terms = self.ngram['summary'].iloc[new]
 
         document_idx = self.ngram['features'][:, important_terms.index].nonzero()[0]
