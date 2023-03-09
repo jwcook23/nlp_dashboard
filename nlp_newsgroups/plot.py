@@ -51,7 +51,7 @@ class plot(data, actions):
     def user_inputs(self):
 
         self.input['reset'] = Button(label="Reset Selections", button_type="success", width=150)
-        self.input['reset'].on_event("button_click", self.default_figures)
+        self.input['reset'].on_event("button_click", partial(self.default_selections, ignore=None))
 
         self.input['recalculate'] = Button(label="Recalculate Models", button_type="danger", width=150)
         self.input['recalculate'].on_event("button_click", self.recalculate_model)

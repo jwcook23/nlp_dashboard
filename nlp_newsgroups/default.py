@@ -19,7 +19,7 @@ class default():
         self.default_samples()
 
 
-    def default_selections(self, ignore=None):
+    def default_selections(self, event, ignore):
 
         self.sample_number.value = 0
         self.topic_number = None

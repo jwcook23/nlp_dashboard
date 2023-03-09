@@ -138,7 +138,7 @@ class actions(model, default):
         if len(new)==0:
             return
         
-        self.default_selections(ignore='ngram')
+        self.default_selections(event='selected_ngram', ignore='ngram')
 
         sample_title = self.title['ngram'].text
         important_terms = self.ngram['summary'].iloc[new]
@@ -153,7 +153,7 @@ class actions(model, default):
 
     def get_topic_prediction(self, event):
 
-        self.default_selections()
+        self.default_selections(event='get_topic_prediction', ignore=None)
 
         text = pd.Series([self.predict['input'].value])
 
@@ -248,7 +248,7 @@ class actions(model, default):
         if len(new)==0:
             return
 
-        self.default_selections(ignore='topic_number')
+        self.default_selections(event='selected_topic', ignore='topic_number')
 
         self.topic_number = self.source['topic_number'].data['Topic'].iloc[new].values[0]
 
