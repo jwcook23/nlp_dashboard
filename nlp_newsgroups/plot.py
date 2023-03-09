@@ -155,9 +155,11 @@ class plot(data, actions):
 
         self.source[figname] = ColumnDataSource()
         self.input['axis_range'][figname] = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
-        self.input['axis_range'][figname].on_change('value', partial(self.set_yaxis_range, figname=figname, numfactors=25))
 
         self.default_terms(figname)
+
+        numfactors = len(self.figure[figname].y_range.factors)
+        self.input['axis_range'][figname].on_change('value', partial(self.set_yaxis_range, figname=figname, numfactors=numfactors))
 
         cmap = linear_cmap(
             field_name='Document Count', palette='Turbo256', 

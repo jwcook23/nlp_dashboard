@@ -53,7 +53,7 @@ def test_recalculate_model(db):
     # db.recalculate_model(None)
 
 
-@pytest.mark.parametrize('db', [('entity_label')], indirect=True)
-def test_entity_label(db):
+@pytest.mark.parametrize('db', [('selected_entity_label')], indirect=True)
+def test_selected_entity_label(db):
 
-    pass
+    db.selected_entity_label(None, None, new=[0])

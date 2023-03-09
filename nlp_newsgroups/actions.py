@@ -268,10 +268,43 @@ class actions(model, default):
         self.set_samples(f'Selected Topic = {self.topic_number}', text, important_terms['Term'])
 
 
+    def selected_entity_label(self, attr, old, new):
+
+        if len(new)==0:
+            return
+
+        raise NotImplementedError('selected_entity_label not implemented')
+    
+        # TODO: generalize cross-filtering for documents for all figures?
+        # selected = self.source['entity_label'].data['Terms'].iloc[new]
+
+
+
+    def selected_entity(self, attr, old, new):
+
+        if len(new)==0:
+            return
+        
+        raise NotImplementedError('selected_entity not implemented')
+
+        # self.default_selections(event='selected_ngram', ignore='ngram')
+
+        # sample_title = self.title['ngram'].text
+        # important_terms = self.ngram['summary'].iloc[new]
+
+        # document_idx = self.ngram['features'][:, important_terms.index].nonzero()[0]
+
+        # text = self.data_input[document_idx]
+
+        # # TODO: show distribution of term importance
+        # self.set_samples(sample_title, text, important_terms['terms'])
+
+
     def set_yaxis_range(self, attr, old, new, figname, numfactors):
         
         start = floor(new)
-        end = start+min(self.input['axis_range'][figname].end, numfactors)
+        end = start+numfactors
+        end = min(self.input['axis_range'][figname].end, end)
 
         self.figure[figname].y_range.factors = self.factors[figname][start:end]
         self.figure[figname].yaxis[0].axis_label = f'Terms {start}-{end-1}'
