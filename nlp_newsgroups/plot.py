@@ -1,5 +1,6 @@
 from math import pi
 from typing import Literal
+from functools import partial
 
 from bokeh.plotting import figure
 from bokeh.models import (
@@ -12,15 +13,13 @@ from squarify import normalize_sizes, squarify
 
 from nlp_newsgroups.data import data
 from nlp_newsgroups.actions import actions
-from nlp_newsgroups.default import default
 
-class plot(data, actions, default):
+class plot(data, actions):
 
 
     def __init__(self):
 
         data.__init__(self)
-        default.__init__(self)
         actions.__init__(self)
 
         self.data_input = self.data_all['text']
@@ -28,7 +27,7 @@ class plot(data, actions, default):
         self.figure = {}
         self.source = {}
         self.glyph = {}
-        self.input = {}
+        self.input = {'axis_range': {}}
 
         self.user_inputs()
 
@@ -140,38 +139,33 @@ class plot(data, actions, default):
         self.default_samples()
 
 
-    def plot_term(self, source: Literal = ['ngram','entity']):
+    def plot_term(self, figname: Literal = ['ngram','entity']):
 
-        self.figure[source] = figure(
+        self.figure[figname] = figure(
             height=550, width=350, toolbar_location=None, tools="tap", tooltips="Document Count = @{Document Count}",
             x_axis_label='Term Count', y_range=[]
         )
-        self.figure[source].xaxis.major_label_orientation = pi/8
+        self.figure[figname].xaxis.major_label_orientation = pi/8
 
-        self.source[source] = ColumnDataSource()
-        # TODO: shared functionality
-        if source=='ngram':
-            self.input['ngram_range'] = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
-            self.input['ngram_range'].on_change('value', self.set_ngram_range)
-            self.default_ngram()
-        elif source=='entity':
-            self.input['entity_range'] = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
-            self.input['entity_range'].on_change('value', self.set_entity_range)
-            self.default_entity()
+        self.source[figname] = ColumnDataSource()
+        self.input['axis_range'][figname] = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
+        self.input['axis_range'][figname].on_change('value', partial(self.set_yaxis_range, figname=figname))
+
+        self.default_terms(figname)
 
         cmap = linear_cmap(
             field_name='Document Count', palette='Turbo256', 
-            low=min(self.source[source].data['Document Count']), high=max(self.source[source].data['Document Count'])
+            low=min(self.source[figname].data['Document Count']), high=max(self.source[figname].data['Document Count'])
         )
         color_bar = ColorBar(color_mapper=cmap['transform'], title='Document Count')
 
-        self.figure[source].hbar(
+        self.figure[figname].hbar(
             y='Terms', right='Term Count',
-            source=self.source[source], width=0.9, fill_color=cmap, line_color=None
+            source=self.source[figname], width=0.9, fill_color=cmap, line_color=None
         )
-        self.figure[source].add_layout(color_bar, 'right')   
+        self.figure[figname].add_layout(color_bar, 'right')   
 
-        self.source[source].selected.on_change('indices', self.selected_ngram)
+        self.source[figname].selected.on_change('indices', self.selected_ngram)
 
 
     def plot_topics_terms(self):

@@ -8,10 +8,13 @@ from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 from bokeh.models import Legend
 
 from nlp_newsgroups.model import model
+from nlp_newsgroups.default import default
 
-class actions(model):
+class actions(model, default):
 
     def __init__(self):
+
+        default.__init__(self)
 
         self.model_topic_fname = 'model_topic.pkl'
         self.model_ner_fname = 'model_ner.pkl'
@@ -43,7 +46,6 @@ class actions(model):
             if params_changed:
                 self.default_figures(None)
 
-            # TODO: save new model changes
             if not params_changed:
                 self.save_model(None)
     
@@ -264,3 +266,12 @@ class actions(model):
         self.set_topics_distribution(self.topic_number, important_terms)
 
         self.set_samples(f'Selected Topic = {self.topic_number}', text, important_terms['Term'])
+
+
+    def set_yaxis_range(self, attr, old, new, figname):
+        
+        start = floor(new)
+        end = start+min(self.input['axis_range'][figname].end, 25)
+
+        self.figure[figname].y_range.factors = self.factors[figname][start:end]
+        self.figure[figname].yaxis[0].axis_label = f'Terms {start}-{end-1}'

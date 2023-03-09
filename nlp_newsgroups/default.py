@@ -7,7 +7,7 @@ class default():
 
     def __init__(self):
 
-        pass
+        self.factors = {}
 
 
     def default_figures(self, event):
@@ -45,15 +45,6 @@ class default():
         self.sample_text = None
 
 
-    def set_ngram_range(self, attr, old, new):
-
-        start = floor(new)
-        end = ceil(new)+min(self.input['ngram_range'].end, 25)
-
-        self.figure['ngram'].y_range.factors = self.ngram_factors[start:end]
-        self.figure['ngram'].yaxis[0].axis_label = f'Terms {start}-{end-1}'
-
-
     def default_ngram(self):
 
         ngram = self.ngram['summary']
@@ -64,19 +55,10 @@ class default():
             'Document Count': ngram['document_count']
         }
 
-        self.ngram_factors = ngram['terms'].tolist()
+        self.factors['ngram'] = ngram['terms'].tolist()
 
-        self.input['ngram_range'].end = len(self.ngram_factors)
-        self.set_ngram_range(None, None, self.input['ngram_range'].value)
-
-
-    def set_entity_range(self, attr, old, new):
-
-        start = floor(new)
-        end = ceil(new)+min(self.input['entity_range'].end, 25)
-
-        self.figure['entity'].y_range.factors = self.entity_factors[start:end]
-        self.figure['entity'].yaxis[0].axis_label = f'Terms {start}-{end-1}'
+        self.input['axis_range']['ngram'].end = len(self.factors['ngram'])
+        self.set_yaxis_range(None, None, self.input['axis_range']['ngram'].value, 'ngram')
 
 
     def default_entity(self):
@@ -97,10 +79,18 @@ class default():
             'Document Count': entity['document_count']
         }
 
-        self.entity_factors = entity['entity_clean'].tolist()
+        self.factors['entity'] = entity['entity_clean'].tolist()
 
-        self.input['entity_range'].end = len(self.entity_factors)
-        self.set_entity_range(None, None, self.input['entity_range'].value)
+        self.input['axis_range']['entity'].end = len(self.factors['entity'])
+        self.set_yaxis_range(None, None, self.input['axis_range']['entity'].value, 'entity')
+
+
+    def default_terms(self, figname):
+
+        if figname == 'ngram':
+            self.default_ngram()
+        elif figname == 'entity':
+            self.default_entity()
 
 
     def default_topic_assignment(self):

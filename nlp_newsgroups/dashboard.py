@@ -3,12 +3,10 @@
 # TODO: complaints data source
 # https://www.consumerfinance.gov/data-research/consumer-complaints/
 
-# TODO: ability to name topics
 # TODO: ability to lookup words (topics they are assigned to and their importance)
 # TODO: n-gram topic count in addition to document count (option to fit the above todo?)
 
 # TODO: compare topic models
-# TODO: named entity recognition
 # TODO: ngram for stopwords
 
 from bokeh.plotting import curdoc, output_file, show
@@ -58,8 +56,8 @@ class dashboard(plot):
                 column(
                     self.title['terms'],
                     Tabs(tabs=[
-                        TabPanel(child=column(self.input['ngram_range'], self.figure['ngram']), title='Term Count'),
-                        TabPanel(child=column(self.input['entity_range'], self.figure['entity']), title='Entity Count'),
+                        TabPanel(child=column(self.input['axis_range']['ngram'], self.figure['ngram']), title='Term Count'),
+                        TabPanel(child=column(self.input['axis_range']['entity'], self.figure['entity']), title='Entity Count'),
                     ])
                 ),
                 column(
