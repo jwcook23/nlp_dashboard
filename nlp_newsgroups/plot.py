@@ -37,8 +37,10 @@ class plot(data, actions):
         
         self.status_message = Div(text='')
 
+        # TODO: rename plot_term to something like plot_ybar & figheight var name
         self.plot_term('ngram')
-        self.plot_term('entity')
+        self.plot_term('entity', figheight=350)
+        self.plot_term('entity_label', figheight=150)
         self.plot_topics_terms()
         self.plot_topics_distribution()
         self.plot_assignment()
@@ -89,7 +91,10 @@ class plot(data, actions):
 
         self.title = {
             'main': Div(text=f'NLP Dashboard<br>{len(self.data_input):,} Documents', styles={'font-size': '150%', 'font-weight': 'bold'}, width=175),
-            'terms': Div(text='Term/Entity Counts', styles={'font-size': '125%', 'font-weight': 'bold'}, width=150),
+            'terms_entity': Div(text='Term/Entity Counts', styles={'font-size': '125%', 'font-weight': 'bold'}, width=150),
+            'ngram': Div(text='Term', styles={'font-weight': 'bold'}, width=75),
+            'entity': Div(text='Entity', styles={'font-weight': 'bold'}, width=75),
+            'entity_label': Div(text='Entity Label', styles={'font-weight': 'bold'}, width=75),
             'topics': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
             'topic_distribution': Div(text='Selected Topic Term Importance (all terms)', styles={'font-weight': 'bold'}, width=275),
             'sample': Div(text='', styles={'font-weight': 'bold', 'font-size': '125%'}, width=250)
@@ -139,17 +144,18 @@ class plot(data, actions):
         self.default_samples()
 
 
-    def plot_term(self, figname: Literal = ['ngram','entity']):
+    def plot_term(self, figname: Literal = ['ngram','entity','entity_label'], figheight=550):
 
         self.figure[figname] = figure(
-            height=550, width=350, toolbar_location=None, tools="tap", tooltips="Document Count = @{Document Count}",
+            height=figheight, width=350, toolbar_location=None, tools="tap", 
+            tooltips="Term Count = @{Term Count}<br>Document Count = @{Document Count}",
             x_axis_label='Term Count', y_range=[]
         )
         self.figure[figname].xaxis.major_label_orientation = pi/8
 
         self.source[figname] = ColumnDataSource()
         self.input['axis_range'][figname] = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
-        self.input['axis_range'][figname].on_change('value', partial(self.set_yaxis_range, figname=figname))
+        self.input['axis_range'][figname].on_change('value', partial(self.set_yaxis_range, figname=figname, numfactors=25))
 
         self.default_terms(figname)
 

@@ -140,7 +140,7 @@ class actions(model, default):
         
         self.default_selections(ignore='ngram')
 
-        sample_title = self.title['terms'].text
+        sample_title = self.title['ngram'].text
         important_terms = self.ngram['summary'].iloc[new]
 
         document_idx = self.ngram['features'][:, important_terms.index].nonzero()[0]
@@ -198,11 +198,11 @@ class actions(model, default):
     
     def set_topics_distribution_range(self, attr, old, new):
 
-        start = floor(new[0])
+        start = floor(new[0])-1
         end = ceil(new[1])
 
         self.figure['topic_distribution'].x_range.factors = self.topic_distribution_factors[start:end+1]
-        self.figure['topic_distribution'].xaxis[0].axis_label = f'Terms {start}-{end}'
+        self.figure['topic_distribution'].xaxis[0].axis_label = f'Terms {start+1}-{end}'
 
 
     def set_topics_distribution(self, title_text, important_terms):
@@ -268,10 +268,10 @@ class actions(model, default):
         self.set_samples(f'Selected Topic = {self.topic_number}', text, important_terms['Term'])
 
 
-    def set_yaxis_range(self, attr, old, new, figname):
+    def set_yaxis_range(self, attr, old, new, figname, numfactors):
         
         start = floor(new)
-        end = start+min(self.input['axis_range'][figname].end, 25)
+        end = start+min(self.input['axis_range'][figname].end, numfactors)
 
         self.figure[figname].y_range.factors = self.factors[figname][start:end]
         self.figure[figname].yaxis[0].axis_label = f'Terms {start}-{end-1}'

@@ -54,10 +54,18 @@ class dashboard(plot):
             ),
             row(
                 column(
-                    self.title['terms'],
+                    self.title['terms_entity'],
                     Tabs(tabs=[
-                        TabPanel(child=column(self.input['axis_range']['ngram'], self.figure['ngram']), title='Term Count'),
-                        TabPanel(child=column(self.input['axis_range']['entity'], self.figure['entity']), title='Entity Count'),
+                        TabPanel(child=column(
+                            row(self.title['ngram'], self.input['axis_range']['ngram']), 
+                            self.figure['ngram']
+                        ), title='Term Count'),
+                        TabPanel(child=column(
+                            row(self.title['entity_label'], self.input['axis_range']['entity_label']),
+                            self.figure['entity_label'],
+                            row(self.title['entity'], self.input['axis_range']['entity']), 
+                            self.figure['entity']
+                        ), title='Entity Count'),
                     ])
                 ),
                 column(

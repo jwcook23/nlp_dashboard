@@ -58,7 +58,7 @@ class default():
         self.factors['ngram'] = ngram['terms'].tolist()
 
         self.input['axis_range']['ngram'].end = len(self.factors['ngram'])
-        self.set_yaxis_range(None, None, self.input['axis_range']['ngram'].value, 'ngram')
+        self.set_yaxis_range(None, None, self.input['axis_range']['ngram'].value, 'ngram', 25)
 
 
     def default_entity(self):
@@ -82,7 +82,29 @@ class default():
         self.factors['entity'] = entity['entity_clean'].tolist()
 
         self.input['axis_range']['entity'].end = len(self.factors['entity'])
-        self.set_yaxis_range(None, None, self.input['axis_range']['entity'].value, 'entity')
+        self.set_yaxis_range(None, None, self.input['axis_range']['entity'].value, 'entity', 20)
+
+    
+    def default_entity_label(self):
+
+        entity = self.entity['terms']
+
+        entity = entity.groupby('entity_label')
+        entity = entity.agg({'entity_clean': 'nunique', 'document': 'nunique'})
+        entity = entity.rename(columns={'entity_clean': 'entity_count', 'document': 'document_count'})
+        entity = entity.reset_index()
+        entity = entity.sort_values(by='entity_count', ascending=False)
+        # TODO: rename for clarity (plot_term function also needs adjustent)
+        self.source['entity_label'].data = {
+            'Terms': entity['entity_label'],
+            'Term Count': entity['entity_count'],
+            'Document Count': entity['document_count']
+        }
+
+        self.factors['entity_label'] = entity['entity_label'].tolist()
+
+        self.input['axis_range']['entity_label'].end = len(self.factors['entity_label'])
+        self.set_yaxis_range(None, None, self.input['axis_range']['entity_label'].value, 'entity_label', 5)
 
 
     def default_terms(self, figname):
@@ -91,6 +113,8 @@ class default():
             self.default_ngram()
         elif figname == 'entity':
             self.default_entity()
+        elif figname == 'entity_label':
+            self.default_entity_label()
 
 
     def default_topic_assignment(self):
