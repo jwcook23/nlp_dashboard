@@ -48,7 +48,7 @@ class default():
     def set_ngram_range(self, attr, old, new):
 
         start = floor(new)
-        end = ceil(new)+min(self.input_ngram_range.end, 25)
+        end = ceil(new)+min(self.input['ngram_range'].end, 25)
 
         self.figure['ngram'].y_range.factors = self.ngram_factors[start:end]
         self.figure['ngram'].yaxis[0].axis_label = f'Terms {start}-{end-1}'
@@ -66,14 +66,14 @@ class default():
 
         self.ngram_factors = ngram['terms'].tolist()
 
-        self.input_ngram_range.end = len(self.ngram_factors)
-        self.set_ngram_range(None, None, self.input_ngram_range.value)
+        self.input['ngram_range'].end = len(self.ngram_factors)
+        self.set_ngram_range(None, None, self.input['ngram_range'].value)
 
 
     def set_entity_range(self, attr, old, new):
 
         start = floor(new)
-        end = ceil(new)+min(self.input_entity_range.end, 25)
+        end = ceil(new)+min(self.input['entity_range'].end, 25)
 
         self.figure['entity'].y_range.factors = self.entity_factors[start:end]
         self.figure['entity'].yaxis[0].axis_label = f'Terms {start}-{end-1}'
@@ -83,6 +83,14 @@ class default():
 
         entity = self.entity['summary']
 
+        # TODO: graph for filtering by label type
+        # self.entity['summary']['entity_label'].value_counts()
+
+        entity = entity.groupby('entity_clean')
+        entity = entity.agg({'entity_count': sum, 'document_count': sum})
+        entity = entity.reset_index()
+        entity = entity.sort_values(by='entity_count', ascending=False)
+
         self.source['entity'].data = {
             'Terms': entity['entity_clean'],
             'Term Count': entity['entity_count'],
@@ -91,14 +99,14 @@ class default():
 
         self.entity_factors = entity['entity_clean'].tolist()
 
-        self.input_entity_range.end = len(self.entity_factors)
-        self.set_entity_range(None, None, self.input_entity_range.value)
+        self.input['entity_range'].end = len(self.entity_factors)
+        self.set_entity_range(None, None, self.input['entity_range'].value)
 
 
     def default_topic_assignment(self):
 
-        self.input_topic_name.title = 'Select to Rename'
-        self.input_topic_name.value = ''
+        self.input['topic_name'].title = 'Select to Rename'
+        self.input['topic_name'].value = ''
 
 
     def default_topics_terms(self):

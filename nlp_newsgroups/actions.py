@@ -20,12 +20,6 @@ class actions(model):
         with open(self.model_ner_fname, 'rb') as _fh:
             terms, summary = pickle.load(_fh)
 
-            # TODO: display by label type
-            summary = summary.groupby('entity_clean')
-            summary = summary.agg({'entity_count': sum, 'document_count': sum})
-            summary = summary.reset_index()
-            summary = summary.sort_values(by='entity_count', ascending=False)
-
             self.entity = {'terms': terms, 'summary': summary}
 
 
@@ -189,7 +183,7 @@ class actions(model):
 
         # TODO: save model with new topic name
         idx = self.topic['name'].index(self.topic_number)
-        new_name = self.input_topic_name.value
+        new_name = self.input['topic_name'].value
         self.topic['name'][idx] = new_name
         self.predict['figure'].y_range.factors = self.topic['name']
         
@@ -242,9 +236,9 @@ class actions(model):
         legend = Legend(items=legend, title='Topic')
         self.figure['topic_distribution'].add_layout(legend, 'right')
 
-        self.input_topic_distribution_range.end = len(self.topic_distribution_factors)
-        self.input_topic_distribution_range.value = (1, min(self.input_topic_distribution_range.end, 25))
-        self.set_topics_distribution_range(None, None, self.input_topic_distribution_range.value)
+        self.input['topic_distribution_range'].end = len(self.topic_distribution_factors)
+        self.input['topic_distribution_range'].value = (1, min(self.input['topic_distribution_range'].end, 25))
+        self.set_topics_distribution_range(None, None, self.input['topic_distribution_range'].value)
 
 
     def selected_topic(self, attr, old, new):

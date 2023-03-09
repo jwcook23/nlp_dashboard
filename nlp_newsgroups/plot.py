@@ -28,6 +28,7 @@ class plot(data, actions, default):
         self.figure = {}
         self.source = {}
         self.glyph = {}
+        self.input = {}
 
         self.user_inputs()
 
@@ -48,18 +49,18 @@ class plot(data, actions, default):
 
     def user_inputs(self):
 
-        self.input_reset = Button(label="Reset Selections", button_type="success", width=150)
-        self.input_reset.on_event("button_click", self.default_figures)
+        self.input['reset'] = Button(label="Reset Selections", button_type="success", width=150)
+        self.input['reset'].on_event("button_click", self.default_figures)
 
-        self.input_recalculate = Button(label="Recalculate Models", button_type="danger", width=150)
-        self.input_recalculate.on_event("button_click", self.recalculate_model)
+        self.input['recalculate'] = Button(label="Recalculate Models", button_type="danger", width=150)
+        self.input['recalculate'].on_event("button_click", self.recalculate_model)
         code = '{ alert("Recalculating Models! This may take a few minutes."); }'
-        self.input_recalculate.js_on_click(CustomJS(code=code))
+        self.input['recalculate'].js_on_click(CustomJS(code=code))
 
-        self.input_save = Button(label="Save Models", button_type="warning", width=150)
-        self.input_save.on_event("button_click", self.save_model)
+        self.input['save'] = Button(label="Save Models", button_type="warning", width=150)
+        self.input['save'].on_event("button_click", self.save_model)
         code = '{ alert("Models Saved!"); }'
-        self.input_save.js_on_click(CustomJS(code=code))
+        self.input['save'].js_on_click(CustomJS(code=code))
 
         # BUG: initialize model with these values, recalcuate if needed
         token_pattern = [('(?u)\\b\\w\\w+\\b', '2 or more alphanumeric characters')]
@@ -125,7 +126,6 @@ class plot(data, actions, default):
         return source_data, source_text
         
 
-
     def plot_samples(self):
 
         self.sample_legend = Div(text='')
@@ -151,12 +151,12 @@ class plot(data, actions, default):
         self.source[source] = ColumnDataSource()
         # TODO: shared functionality
         if source=='ngram':
-            self.input_ngram_range = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
-            self.input_ngram_range.on_change('value', self.set_ngram_range)
+            self.input['ngram_range'] = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
+            self.input['ngram_range'].on_change('value', self.set_ngram_range)
             self.default_ngram()
         elif source=='entity':
-            self.input_entity_range = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
-            self.input_entity_range.on_change('value', self.set_entity_range)
+            self.input['entity_range'] = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
+            self.input['entity_range'].on_change('value', self.set_entity_range)
             self.default_entity()
 
         cmap = linear_cmap(
@@ -214,15 +214,15 @@ class plot(data, actions, default):
             width=950, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Importance', title=''
         )
         self.figure['topic_distribution'].xaxis.major_label_orientation = pi/8
-        self.input_topic_distribution_range = RangeSlider(start=1, end=2, value=(1,2), step=1, title='Term Range Displayed', width=125)
-        self.input_topic_distribution_range.on_change('value', self.set_topics_distribution_range)
+        self.input['topic_distribution_range'] = RangeSlider(start=1, end=2, value=(1,2), step=1, title='Term Range Displayed', width=125)
+        self.input['topic_distribution_range'].on_change('value', self.set_topics_distribution_range)
         self.default_topics_distribution()
 
 
     def plot_assignment(self):
 
-        self.input_topic_description = Div(text="*Select topic then assign new name.")
-        self.input_topic_name = TextInput(value="", title="", width=125)
+        self.input['topic_description'] = Div(text="*Select topic then assign new name.")
+        self.input['topic_name'] = TextInput(value="", title="", width=125)
         self.set_topic_name = Button(label="*Rename Topic", button_type="default", width=125)
         self.set_topic_name.on_event("button_click", self.rename_topic)
 

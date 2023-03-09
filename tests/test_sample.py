@@ -32,7 +32,7 @@ def test_selected_topic(db):
 def test_rename_topic(db):
 
     db.selected_topic(None, None, new=[0])
-    db.input_topic_name.value = 'Topic Renamed'
+    db.input['topic_name'].value = 'Topic Renamed'
     db.rename_topic(None)
     db.selected_topic(None, None, new=[1])
     db.selected_topic(None, None, new=[0])
@@ -50,3 +50,9 @@ def test_recalculate_model(db):
 
     db.model_inputs['stop_words'].value = 'AX'
     db.recalculate_model(None)
+
+
+@pytest.mark.parametrize('db', [('entity_label')], indirect=True)
+def test_entity_label(db):
+
+    pass

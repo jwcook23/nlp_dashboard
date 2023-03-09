@@ -48,7 +48,7 @@ class dashboard(plot):
 
         self.layout = column(
             row(
-                row(self.title['main'], column(self.input_recalculate, self.input_save, self.input_reset), space),
+                row(self.title['main'], column(self.input['recalculate'], self.input['save'], self.input['reset']), space),
                 Tabs(tabs=[
                     TabPanel(child=row(*general_hyperparameters.values()), title='General Hyperparameters'),
                     TabPanel(child=row(*topic_hyperparameters.values()), title='Topic Hyperparameters')
@@ -58,15 +58,15 @@ class dashboard(plot):
                 column(
                     self.title['terms'],
                     Tabs(tabs=[
-                        TabPanel(child=column(self.input_ngram_range, self.figure['ngram']), title='Term Count'),
-                        TabPanel(child=column(self.input_entity_range, self.figure['entity']), title='Entity Count'),
+                        TabPanel(child=column(self.input['ngram_range'], self.figure['ngram']), title='Term Count'),
+                        TabPanel(child=column(self.input['entity_range'], self.figure['entity']), title='Entity Count'),
                     ])
                 ),
                 column(
                     self.title['topics'],
                     Tabs(tabs=[
                         TabPanel(child=column(
-                            row(self.set_topic_name, self.input_topic_name, self.input_topic_description),
+                            row(self.set_topic_name, self.input['topic_name'], self.input['topic_description']),
                             self.figure['topics']
                         ), title='Topic Summary'),
                         TabPanel(
@@ -79,7 +79,7 @@ class dashboard(plot):
                         )
                     ]),
                     column(
-                        row(self.title['topic_distribution'], self.input_topic_distribution_range), 
+                        row(self.title['topic_distribution'], self.input['topic_distribution_range']), 
                         self.figure['topic_distribution']
                     )
                 )
