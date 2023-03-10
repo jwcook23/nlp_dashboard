@@ -37,10 +37,10 @@ class plot(data, actions):
         
         self.status_message = Div(text='')
 
-        # TODO: rename plot_term to something like plot_ybar & figheight var name
+        # TODO: rename plot_term to something like plot_ybar & fig_height var name
         self.plot_term('ngram')
-        self.plot_term('entity', figheight=350)
-        self.plot_term('entity_label', figheight=150)
+        self.plot_term('entity', fig_height=350)
+        self.plot_term('entity_label', fig_height=150)
         self.plot_topics_terms()
         self.plot_topics_distribution()
         self.plot_assignment()
@@ -144,36 +144,36 @@ class plot(data, actions):
         self.default_samples()
 
 
-    def plot_term(self, figname: Literal = ['ngram','entity','entity_label'], figheight=550):
+    def plot_term(self, fig_name: Literal = ['ngram','entity','entity_label'], fig_height=550):
 
-        self.figure[figname] = figure(
-            height=figheight, width=350, toolbar_location=None, tools="tap", 
+        self.figure[fig_name] = figure(
+            height=fig_height, width=350, toolbar_location=None, tools="tap", 
             tooltips="Term Count = @{Term Count}<br>Document Count = @{Document Count}",
             x_axis_label='Term Count', y_range=[]
         )
-        self.figure[figname].xaxis.major_label_orientation = pi/8
+        self.figure[fig_name].xaxis.major_label_orientation = pi/8
 
-        self.source[figname] = ColumnDataSource()
-        self.input['axis_range'][figname] = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
+        self.source[fig_name] = ColumnDataSource()
+        self.input['axis_range'][fig_name] = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
 
-        self.default_terms(figname)
+        self.default_terms(fig_name)
 
-        numfactors = len(self.figure[figname].y_range.factors)
-        self.input['axis_range'][figname].on_change('value', partial(self.set_yaxis_range, figname=figname, numfactors=numfactors))
+        numfactors = len(self.figure[fig_name].y_range.factors)
+        self.input['axis_range'][fig_name].on_change('value', partial(self.set_yaxis_range, fig_name=fig_name, numfactors=numfactors))
 
         cmap = linear_cmap(
             field_name='Document Count', palette='Turbo256', 
-            low=min(self.source[figname].data['Document Count']), high=max(self.source[figname].data['Document Count'])
+            low=min(self.source[fig_name].data['Document Count']), high=max(self.source[fig_name].data['Document Count'])
         )
         color_bar = ColorBar(color_mapper=cmap['transform'], title='Document Count')
 
-        self.figure[figname].hbar(
+        self.figure[fig_name].hbar(
             y='Terms', right='Term Count',
-            source=self.source[figname], width=0.9, fill_color=cmap, line_color=None
+            source=self.source[fig_name], width=0.9, fill_color=cmap, line_color=None
         )
-        self.figure[figname].add_layout(color_bar, 'right')   
+        self.figure[fig_name].add_layout(color_bar, 'right')   
 
-        self.source[figname].selected.on_change('indices', self.selected_ngram)
+        self.source[fig_name].selected.on_change('indices', partial(self.selected_source, fig_name=fig_name))
 
 
     def plot_topics_terms(self):

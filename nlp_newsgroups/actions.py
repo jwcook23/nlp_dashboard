@@ -133,15 +133,25 @@ class actions(model, default):
             self.sample_document.text = text
 
 
-    def selected_ngram(self, attr, old, new):
+    def selected_source(self, attr, old, row_source, fig_name):
 
-        if len(new)==0:
+        if fig_name=='ngram':
+            self.selected_ngram(row_source)
+        elif fig_name=='entity_label':
+            self.selected_entity_label(row_source)
+        elif fig_name=='entity':
+            self.selected_entity(row_source)
+
+
+    def selected_ngram(self, row_source):
+
+        if len(row_source)==0:
             return
         
         self.default_selections(event='selected_ngram', ignore='ngram')
 
         sample_title = self.title['ngram'].text
-        important_terms = self.ngram['summary'].iloc[new]
+        important_terms = self.ngram['summary'].iloc[row_source]
 
         document_idx = self.ngram['features'][:, important_terms.index].nonzero()[0]
 
@@ -149,6 +159,41 @@ class actions(model, default):
 
         # TODO: show distribution of term importance
         self.set_samples(sample_title, text, important_terms['terms'])
+
+
+    def selected_entity_label(self, row_source):
+
+        if len(row_source)==0:
+            return    
+        
+        selected = self.source['entity_label'].data['Terms'].iloc[row_source]
+        entity = self.entity['summary'][
+            self.entity['summary']['entity_label'].isin(selected)
+        ]
+
+        self.set_entity(entity)
+
+        # raise NotImplementedError('selected_entity_label not implemented')
+
+
+    def selected_entity(self, row_source):
+
+        if len(row_source)==0:
+            return
+        
+        raise NotImplementedError('selected_entity not implemented')
+
+        # self.default_selections(event='selected_ngram', ignore='ngram')
+
+        # sample_title = self.title['ngram'].text
+        # important_terms = self.ngram['summary'].iloc[new]
+
+        # document_idx = self.ngram['features'][:, important_terms.index].nonzero()[0]
+
+        # text = self.data_input[document_idx]
+
+        # # TODO: show distribution of term importance
+        # self.set_samples(sample_title, text, important_terms['terms'])
 
 
     def get_topic_prediction(self, event):
@@ -268,43 +313,11 @@ class actions(model, default):
         self.set_samples(f'Selected Topic = {self.topic_number}', text, important_terms['Term'])
 
 
-    def selected_entity_label(self, attr, old, new):
-
-        if len(new)==0:
-            return
-
-        raise NotImplementedError('selected_entity_label not implemented')
-    
-        
-        # selected = self.source['entity_label'].data['Terms'].iloc[new]
-
-
-
-    def selected_entity(self, attr, old, new):
-
-        if len(new)==0:
-            return
-        
-        raise NotImplementedError('selected_entity not implemented')
-
-        # self.default_selections(event='selected_ngram', ignore='ngram')
-
-        # sample_title = self.title['ngram'].text
-        # important_terms = self.ngram['summary'].iloc[new]
-
-        # document_idx = self.ngram['features'][:, important_terms.index].nonzero()[0]
-
-        # text = self.data_input[document_idx]
-
-        # # TODO: show distribution of term importance
-        # self.set_samples(sample_title, text, important_terms['terms'])
-
-
-    def set_yaxis_range(self, attr, old, new, figname, numfactors):
+    def set_yaxis_range(self, attr, old, new, fig_name, numfactors):
         
         start = floor(new)
         end = start+numfactors
-        end = min(self.input['axis_range'][figname].end, end)
+        end = min(self.input['axis_range'][fig_name].end, end)
 
-        self.figure[figname].y_range.factors = self.factors[figname][start-1:end]
-        self.figure[figname].yaxis[0].axis_label = f'Terms {start}-{end-1}'
+        self.figure[fig_name].y_range.factors = self.factors[fig_name][start-1:end]
+        self.figure[fig_name].yaxis[0].axis_label = f'Terms {start}-{end-1}'

@@ -61,12 +61,7 @@ class default():
         self.set_yaxis_range(None, None, self.input['axis_range']['ngram'].value, 'ngram', 25)
 
 
-    def default_entity(self):
-
-        entity = self.entity['summary']
-
-        # TODO: graph for filtering by label type
-        # self.entity['summary']['entity_label'].value_counts()
+    def set_entity(self, entity):
 
         entity = entity.groupby('entity_clean')
         entity = entity.agg({'entity_count': sum, 'document_count': sum})
@@ -82,9 +77,15 @@ class default():
         self.factors['entity'] = entity['entity_clean'].tolist()
 
         self.input['axis_range']['entity'].end = len(self.factors['entity'])
-        self.set_yaxis_range(None, None, self.input['axis_range']['entity'].value, 'entity', 20)
+        self.set_yaxis_range(None, None, self.input['axis_range']['entity'].value, 'entity', 20)  
 
+
+    def default_entity(self):
+
+        entity = self.entity['summary']
+        self.set_entity(entity)
     
+
     def default_entity_label(self):
 
         entity = self.entity['terms']
@@ -107,13 +108,13 @@ class default():
         self.set_yaxis_range(None, None, self.input['axis_range']['entity_label'].value, 'entity_label', 5)
 
 
-    def default_terms(self, figname):
+    def default_terms(self, fig_name):
 
-        if figname == 'ngram':
+        if fig_name == 'ngram':
             self.default_ngram()
-        elif figname == 'entity':
+        elif fig_name == 'entity':
             self.default_entity()
-        elif figname == 'entity_label':
+        elif fig_name == 'entity_label':
             self.default_entity_label()
 
 

@@ -19,7 +19,7 @@ def db(request):
 @pytest.mark.parametrize('db', [('selected_ngram')], indirect=True)
 def test_selected_ngram(db):
 
-    db.selected_ngram(None, None, new=[1])
+    db.selected_source(None, None, row_source=[1], fig_name='ngram')
 
 
 @pytest.mark.parametrize('db', [('selected_topic')], indirect=True)
@@ -56,4 +56,4 @@ def test_recalculate_model(db):
 @pytest.mark.parametrize('db', [('selected_entity_label')], indirect=True)
 def test_selected_entity_label(db):
 
-    db.selected_entity_label(None, None, new=[0])
+    db.selected_source(None, None, row_source=[0], fig_name='entity_label')
