@@ -275,7 +275,7 @@ class actions(model, default):
 
         raise NotImplementedError('selected_entity_label not implemented')
     
-        # TODO: generalize cross-filtering for documents for all figures?
+        
         # selected = self.source['entity_label'].data['Terms'].iloc[new]
 
 
@@ -306,5 +306,5 @@ class actions(model, default):
         end = start+numfactors
         end = min(self.input['axis_range'][figname].end, end)
 
-        self.figure[figname].y_range.factors = self.factors[figname][start:end]
+        self.figure[figname].y_range.factors = self.factors[figname][start-1:end]
         self.figure[figname].yaxis[0].axis_label = f'Terms {start}-{end-1}'

@@ -3,6 +3,8 @@
 # TODO: complaints data source
 # https://www.consumerfinance.gov/data-research/consumer-complaints/
 
+# TODO: generalize cross-filtering for documents for all figures?
+
 # TODO: ability to lookup words (topics they are assigned to and their importance)
 # TODO: n-gram topic count in addition to document count (option to fit the above todo?)
 
