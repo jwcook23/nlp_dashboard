@@ -25,6 +25,14 @@ class actions(model, default):
 
             self.entity = {'terms': terms, 'summary': summary}
 
+        # TODO: differentiate these tags
+        self.html = {
+            'stopwords': ('<s>', '</s>'),
+            'selected_terms': ('<strong><font color="red">', '</font></strong>'),
+            'topic_terms': ('<strong>', '</strong>'),
+            'labeled_entity': ('<strong><font color="blue">', '</font></strong>')
+        }
+
 
     def model_cache(self, input_params={}):
 
@@ -85,16 +93,53 @@ class actions(model, default):
             self.model_cache(input_params)
 
 
-    def set_samples(self, sample_title, text, important_terms):
+    def set_samples(self, sample_title, text, selected_terms, topic_terms, labeled_entity):
 
         self.title['sample'].text = f'Example Documents:<br>{sample_title}'
-        self.sample_legend.text = '<u>Legend:</u><br><strong>Imporant Terms</strong><br><s>Stop Words</s>'
+        self.sample_legend.text = f'''
+        <u>Legend:</u><br>
+        {self.html['selected_terms'][0]}Selected Term{self.html['selected_terms'][1]}<br>
+        {self.html['stopwords'][0]}Stop Words{self.html['stopwords'][1]}<br>
+        {self.html['topic_terms'][0]}Topic Terms{self.html['topic_terms'][1]}<br>
+        {self.html['labeled_entity'][0]}Labeled Entity{self.html['labeled_entity'][1]}
+        '''
         self.sample_number.title = f'Document Sample #: {len(text)} total'
         self.sample_number.high = len(text)-1
         self.sample_text = text
-        self.sample_important_terms = important_terms
+        self.sample_selected_terms = selected_terms
+        self.sample_topic_terms = topic_terms
+        self.sample_entity_labels = labeled_entity
 
         self.selected_sample(None, None, self.sample_number.value)
+
+
+    def find_text(self, tokens, pattern):
+
+        if pattern is None:
+            return None
+
+        pattern = pattern.str.replace(' +', ' ', regex=True)
+        pattern = pattern.str.strip()
+        pattern = pattern.apply(lambda x: re.escape(x))
+        pattern = pattern.str.replace(r' ', r's+', regex=True)
+        pattern = '|'.join(r'\b'+pattern+r'\b')
+        indices = re.finditer(pattern, tokens, flags=re.IGNORECASE)
+
+        return indices
+    
+
+    def apply_html(self, text, terms, formatter):
+    
+        if terms is None:
+            return text
+
+        for match in terms:
+            idx_start = match.start()
+            idx_end = match.end()-1
+            text[idx_start] = f"{self.html[formatter][0]}{text[idx_start]}"
+            text[idx_end] = f"{text[idx_end]}{self.html[formatter][1]}"
+
+        return text
 
 
     def selected_sample(self, attr, old, new):
@@ -107,27 +152,24 @@ class actions(model, default):
             pattern = '[^'+pattern+']'
             tokens = re.sub(pattern, ' ', text)
 
-            pattern = self.sample_important_terms
-            pattern = pattern.str.replace(' ', r'\s+', regex=True)
-            pattern = '|'.join(r'\b'+pattern+r'\b')
-            important_terms = re.finditer(pattern, tokens, flags=re.IGNORECASE)
-
-            pattern = pd.Series(self.model_params['stop_words'])
-            pattern = pattern.str.replace(' ', r'\s+', regex=True)
-            pattern = '|'.join(r'\b'+pattern+r'\b')
-            stopword_terms = re.finditer(pattern, tokens, flags=re.IGNORECASE)
+            # BUG: how to handle overlapping patterns?
+            stopword_terms = self.find_text(tokens, pd.Series(self.model_params['stop_words']))
+            selected_terms = self.find_text(tokens, self.sample_selected_terms)
+            # TODO: highlight name of topic
+            topic_terms = self.find_text(tokens, self.sample_topic_terms)
+            # TODO: highlight label of entity
+            if self.sample_entity_labels is None:
+                labeled_entity = None
+            else:
+                labeled_entity = self.find_text(tokens, self.sample_entity_labels['entity_text'])
 
             text = list(text)
-            for match in important_terms:
-                idx_start = match.start()
-                idx_end = match.end()-1
-                text[idx_start] = f'<text="3"><strong>{text[idx_start]}'
-                text[idx_end] = f'{text[idx_end]}</text></strong>'
-            for match in stopword_terms:
-                idx_start = match.start()
-                idx_end = match.end()-1
-                text[idx_start] = f'<s>{text[idx_start]}'
-                text[idx_end] = f'{text[idx_end]}</s>'
+
+            text = self.apply_html(text, stopword_terms, 'stopwords')
+            text = self.apply_html(text, selected_terms, 'selected_terms')
+            text = self.apply_html(text, topic_terms, 'topic_terms')
+            text = self.apply_html(text, labeled_entity, 'labeled_entity')
+
             text = ''.join(text)
 
             self.sample_document.text = text
@@ -151,14 +193,16 @@ class actions(model, default):
         self.default_selections(event='selected_ngram', ignore='ngram')
 
         sample_title = self.title['ngram'].text
-        important_terms = self.ngram['summary'].iloc[row_source]
+        selected_terms = self.ngram['summary'].iloc[row_source]['terms']
 
-        document_idx = self.ngram['features'][:, important_terms.index].nonzero()[0]
+        document_idx = self.ngram['features'][:, selected_terms.index].nonzero()[0]
 
         text = self.data_input[document_idx]
 
         # TODO: show distribution of term importance
-        self.set_samples(sample_title, text, important_terms['terms'])
+        topic_terms = self.topic['terms']
+        labeled_entity = self.entity['terms'].loc[document_idx,['entity_text','entity_label']]
+        self.set_samples(sample_title, text, selected_terms, topic_terms, labeled_entity)
 
 
     def selected_entity_label(self, row_source):
@@ -181,19 +225,25 @@ class actions(model, default):
         if len(row_source)==0:
             return
         
-        raise NotImplementedError('selected_entity not implemented')
+        selected_terms = self.source['entity'].data['Terms'].iloc[row_source]
+        labeled_entity = self.entity['summary'].loc[
+            self.entity['summary']['entity_clean'].isin(selected_terms), ['entity_label', 'entity_clean']
+        ]
+        labeled_entity = labeled_entity.merge(
+            self.entity['terms'], on=['entity_label', 'entity_clean']
+        )
 
-        # self.default_selections(event='selected_ngram', ignore='ngram')
+        self.default_selections(event='selected_entity', ignore='entity')
 
-        # sample_title = self.title['ngram'].text
-        # important_terms = self.ngram['summary'].iloc[new]
+        sample_title = self.title['entity'].text
 
-        # document_idx = self.ngram['features'][:, important_terms.index].nonzero()[0]
+        document_idx = labeled_entity['document']
 
-        # text = self.data_input[document_idx]
+        text = self.data_input[document_idx]
 
-        # # TODO: show distribution of term importance
-        # self.set_samples(sample_title, text, important_terms['terms'])
+        # TODO: show distribution of term importance
+        topic_terms = self.topic['terms']
+        self.set_samples(sample_title, text, selected_terms, topic_terms, labeled_entity)
 
 
     def get_topic_prediction(self, event):
@@ -211,19 +261,19 @@ class actions(model, default):
         predicted_topic = distribution.loc[distribution['Confidence']>0, 'Topic']
         
         idx = features.nonzero()[1]
-        important_terms = pd.DataFrame({
+        topic_terms = pd.DataFrame({
             'Topic': [predicted_topic]*len(idx),
             'Term': self.topic['terms'].loc[idx],
         })
-        important_terms = important_terms.explode('Topic')
-        important_terms = important_terms.merge(self.topic['summary'], on=['Topic','Term'])
-        important_terms = important_terms[important_terms['Weight']>0]
+        topic_terms = topic_terms.explode('Topic')
+        topic_terms = topic_terms.merge(self.topic['summary'], on=['Topic','Term'])
+        topic_terms = topic_terms[topic_terms['Weight']>0]
 
-        topics = important_terms['Topic'].drop_duplicates()
+        topics = topic_terms['Topic'].drop_duplicates()
         topics = f"Predicted Topics {', '.join(topics)}"
-        self.set_topics_distribution(topics, important_terms)
+        self.set_topics_distribution(topics, topic_terms)
         
-        self.set_samples('Topic Prediction', text, important_terms['Term'])
+        self.set_samples('Topic Prediction', text, None, topic_terms['Term'], None)
 
 
     def rename_topic(self, event):
@@ -250,20 +300,20 @@ class actions(model, default):
         self.figure['topic_distribution'].xaxis[0].axis_label = f'Terms {start+1}-{end}'
 
 
-    def set_topics_distribution(self, title_text, important_terms):
+    def set_topics_distribution(self, title_text, topic_terms):
 
-        self.topic_distribution_factors = important_terms['Term'].drop_duplicates().tolist()
+        self.topic_distribution_factors = topic_terms['Term'].drop_duplicates().tolist()
         self.figure['topic_distribution'].x_range.factors = self.topic_distribution_factors
 
         if self.figure['topic_distribution'].renderers:
             self.figure['topic_distribution'].right = []
 
-        topics = important_terms['Topic'].drop_duplicates()
+        topics = topic_terms['Topic'].drop_duplicates()
         legend = []
         for topic_number in topics.values:
             
-            source = important_terms.loc[
-                important_terms['Topic']==topic_number,
+            source = topic_terms.loc[
+                topic_terms['Topic']==topic_number,
                 ['Term', 'Weight']
             ].to_dict(orient='list')
             
@@ -302,15 +352,17 @@ class actions(model, default):
         ]
 
         document_idx = topics.index
-        important_terms = self.topic['summary'].loc[
+        topic_terms = self.topic['summary'].loc[
             (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Weight']>0)
         ]
 
         text = self.data_input[document_idx]
 
-        self.set_topics_distribution(self.topic_number, important_terms)
-
-        self.set_samples(f'Selected Topic = {self.topic_number}', text, important_terms['Term'])
+        self.set_topics_distribution(self.topic_number, topic_terms)
+        labeled_entity = self.entity['terms'].loc[document_idx,['entity_text','entity_label']]
+        title = f'Selected Topic = {self.topic_number}'
+        
+        self.set_samples(title, text, None, topic_terms['Term'], labeled_entity)
 
 
     def set_yaxis_range(self, attr, old, new, fig_name, numfactors):

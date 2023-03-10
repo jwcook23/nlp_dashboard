@@ -32,6 +32,7 @@ class default():
             self.source[source].selected.indices = []
 
         self.default_topics_distribution()
+        self.default_entity()
 
 
     def default_samples(self):
