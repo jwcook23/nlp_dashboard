@@ -72,7 +72,7 @@ class plot(data, actions):
                 title='Token Pattern',
                 width=250
             ),
-            'stop_words': TextInput(value="", title="Add Stopwords", width=125),
+            'stop_words': TextInput(value="", title="Add Stopwords (comma seperated)", width=125),
             'max_df': Slider(start=0.75, end=1.0, value=0.95, step=0.05, title='Max Doc. Freq.', width=125),
             'min_df': Slider(start=1, end=len(self.data_all), value=2, step=1, title='Min Doc. #', width=125),
             'num_features': NumericInput(value=1000, low=1000, high=10000, title='# Features', width=75),

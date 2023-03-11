@@ -28,7 +28,7 @@ class model():
 
         self.ngram['vectorizer'] = CountVectorizer(
             max_df=self.model_params['max_df'], min_df=self.model_params['min_df'], max_features=self.model_params['num_features'], 
-            stop_words=self.model_params['stop_words'], ngram_range=self.model_params['ngram_range'],
+            stop_words=self.model_params['stop_words'].tolist(), ngram_range=self.model_params['ngram_range'],
             token_pattern=self.model_params['token_pattern']
         )
 
@@ -113,12 +113,12 @@ class model():
         if vectorizer == 'tfidf':
             self.topic['vectorizer'] = TfidfVectorizer(
                 max_df=self.model_params['max_df'], min_df=self.model_params['min_df'], max_features=self.model_params['num_features'], 
-                stop_words=self.model_params['stop_words'], token_pattern=self.model_params['token_pattern']
+                stop_words=self.model_params['stop_words'].tolist(), token_pattern=self.model_params['token_pattern']
             )
         elif vectorizer == 'tf':
             self.topic['vectorizer'] = CountVectorizer(
                 max_df=self.model_params['max_df'], min_df=self.model_params['min_df'], max_features=self.model_params['num_features'], 
-                stop_words=self.model_params['stop_words'], token_pattern=self.model_params['token_pattern']
+                stop_words=self.model_params['stop_words'].tolist(), token_pattern=self.model_params['token_pattern']
             )    
 
         self.topic['features'] = self.topic['vectorizer'].fit_transform(text)

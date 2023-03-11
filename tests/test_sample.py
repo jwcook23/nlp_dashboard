@@ -48,9 +48,8 @@ def test_get_topic_prediction(db):
 @pytest.mark.parametrize('db', [('recalculate_model')], indirect=True)
 def test_recalculate_model(db):
 
-    db.model_inputs['stop_words'].value = 'AX'
-    # TODO: readd test
-    # db.recalculate_model(None)
+    db.model_inputs['stop_words'].value = 'AX, like'
+    db.recalculate_model(None)
 
 
 @pytest.mark.parametrize('db', [('selected_entity_label')], indirect=True)

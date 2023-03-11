@@ -43,7 +43,7 @@ class actions(model, default):
 
             if not input_params:
                 input_params = {key:val.value for key,val in self.model_inputs.items()}
-                input_params['stop_words'] = list(ENGLISH_STOP_WORDS)
+                input_params['stop_words'] = pd.Series(list(ENGLISH_STOP_WORDS))
 
             # BUG: check if slider parameters changed
             model.__init__(self, **input_params)
@@ -78,11 +78,15 @@ class actions(model, default):
 
         input_params = {key: val.value for key,val in self.model_inputs.items()}
         
-        stopwords = input_params['stop_words'].split(',')
-        stopwords = [word.strip().lower() for word in stopwords]
-        input_params['stop_words'] = self.model_params['stop_words']+stopwords
+        stopwords = pd.Series(input_params['stop_words'].split(','))
+        stopwords = stopwords.str.lower()
+        stopwords = stopwords.str.strip()
+        input_params['stop_words'] = pd.concat([self.model_params['stop_words'], stopwords], ignore_index=True)
 
-        change_params = [key for key,val in input_params.items() if val!= self.model_params[key]]
+        compare = [key for key in input_params.keys() if key !='stop_words']
+        change_params = [key for key in compare if input_params[key] != self.model_params[key]]
+        if (input_params['stop_words'].isin(self.model_params['stop_words']) == False).any():
+            change_params += ['stop_words']
         change_params = [self.model_inputs[key].title for key in change_params]
         change_params = ', '.join(change_params)
 
@@ -153,7 +157,7 @@ class actions(model, default):
             tokens = re.sub(pattern, ' ', text)
 
             # BUG: how to handle overlapping patterns?
-            stopword_terms = self.find_text(tokens, pd.Series(self.model_params['stop_words']))
+            stopword_terms = self.find_text(tokens, self.model_params['stop_words'])
             selected_terms = self.find_text(tokens, self.sample_selected_terms)
             # TODO: highlight name of topic
             topic_terms = self.find_text(tokens, self.sample_topic_terms)
