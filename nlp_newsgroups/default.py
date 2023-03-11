@@ -1,5 +1,4 @@
-from math import floor, ceil
-
+import pandas as pd
 from bokeh.transform import factor_cmap
 from bokeh.palettes import Category10
 
@@ -24,9 +23,9 @@ class default():
         self.sample_number.value = 0
         self.topic_number = None
 
-        reset = list(self.source.keys())
+        reset = pd.Series(self.source.keys())
         if ignore is not None:
-            reset.remove(ignore)
+            reset = reset[~reset.isin(ignore)]
 
         for source in reset:
             self.source[source].selected.indices = []
@@ -74,6 +73,7 @@ class default():
             'Term Count': entity['entity_count'],
             'Document Count': entity['document_count']
         }
+        self.source['entity'].selected.indices = []
 
         self.factors['entity'] = entity['entity_clean'].tolist()
 

@@ -190,7 +190,7 @@ class actions(model, default):
         if len(row_source)==0:
             return
         
-        self.default_selections(event='selected_ngram', ignore='ngram')
+        self.default_selections(event='selected_ngram', ignore=pd.Series(['ngram']))
 
         sample_title = self.title['ngram'].text
         selected_terms = self.ngram['summary'].iloc[row_source]['terms']
@@ -233,7 +233,7 @@ class actions(model, default):
             self.entity['terms'], on=['entity_label', 'entity_clean']
         )
 
-        self.default_selections(event='selected_entity', ignore='entity')
+        self.default_selections(event='selected_entity', ignore=pd.Series(['entity','entity_label']))
 
         sample_title = self.title['entity'].text
 
@@ -343,7 +343,7 @@ class actions(model, default):
         if len(new)==0:
             return
 
-        self.default_selections(event='selected_topic', ignore='topic_number')
+        self.default_selections(event='selected_topic', ignore=pd.Series(['topic_number']))
 
         self.topic_number = self.source['topic_number'].data['Topic'].iloc[new].values[0]
 
