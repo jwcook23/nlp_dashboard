@@ -59,15 +59,15 @@ class dashboard(plot):
                     self.title['terms_entity'],
                     Tabs(tabs=[
                         TabPanel(child=column(
-                            row(self.title['ngram'], self.input['axis_range']['ngram']), 
-                            self.figure['ngram']
-                        ), title='Term Count'),
-                        TabPanel(child=column(
                             row(self.title['entity_label'], self.input['axis_range']['entity_label']),
                             self.figure['entity_label'],
                             row(self.title['entity'], self.input['axis_range']['entity']), 
                             self.figure['entity']
-                        ), title='Entity Count'),
+                        ), title='Entity'),
+                        TabPanel(child=column(
+                            row(self.title['ngram'], self.input['axis_range']['ngram']), 
+                            self.figure['ngram']
+                        ), title='Term')
                     ])
                 ),
                 column(

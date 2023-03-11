@@ -365,11 +365,11 @@ class actions(model, default):
         self.set_samples(title, text, None, topic_terms['Term'], labeled_entity)
 
 
-    def set_yaxis_range(self, attr, old, new, fig_name, numfactors):
+    def set_yaxis_range(self, attr, old, new, fig_name, num_factors):
         
         start = floor(new)
-        end = start+numfactors
+        end = start+num_factors-1
         end = min(self.input['axis_range'][fig_name].end, end)
 
         self.figure[fig_name].y_range.factors = self.factors[fig_name][start-1:end]
-        self.figure[fig_name].yaxis[0].axis_label = f'Terms {start}-{end-1}'
+        self.figure[fig_name].yaxis[0].axis_label = f'Terms {start}-{end}'

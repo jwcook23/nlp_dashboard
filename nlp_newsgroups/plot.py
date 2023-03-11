@@ -91,9 +91,9 @@ class plot(data, actions):
 
         self.title = {
             'main': Div(text=f'NLP Dashboard<br>{len(self.data_input):,} Documents', styles={'font-size': '150%', 'font-weight': 'bold'}, width=175),
-            'terms_entity': Div(text='Term/Entity Counts', styles={'font-size': '125%', 'font-weight': 'bold'}, width=150),
+            'terms_entity': Div(text='Entity or Term Summary', styles={'font-size': '125%', 'font-weight': 'bold'}, width=150),
             'ngram': Div(text='Term', styles={'font-weight': 'bold'}, width=75),
-            'entity': Div(text='Entity', styles={'font-weight': 'bold'}, width=75),
+            'entity': Div(text='Entity Name', styles={'font-weight': 'bold'}, width=75),
             'entity_label': Div(text='Entity Label', styles={'font-weight': 'bold'}, width=75),
             'topics': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
             'topic_distribution': Div(text='Selected Topic Term Importance (all terms)', styles={'font-weight': 'bold'}, width=275),
@@ -158,8 +158,8 @@ class plot(data, actions):
 
         self.default_terms(fig_name)
 
-        numfactors = len(self.figure[fig_name].y_range.factors)
-        self.input['axis_range'][fig_name].on_change('value', partial(self.set_yaxis_range, fig_name=fig_name, numfactors=numfactors))
+        num_factors = len(self.figure[fig_name].y_range.factors)
+        self.input['axis_range'][fig_name].on_change('value', partial(self.set_yaxis_range, fig_name=fig_name, num_factors=num_factors))
 
         cmap = linear_cmap(
             field_name='Document Count', palette='Turbo256', 

@@ -31,7 +31,8 @@ class default():
             self.source[source].selected.indices = []
 
         self.default_topics_distribution()
-        self.default_entity()
+        if ignore is not None and not (ignore=='entity').any():
+            self.default_entity()
 
 
     def default_samples(self):
@@ -67,6 +68,7 @@ class default():
         entity = entity.agg({'entity_count': sum, 'document_count': sum})
         entity = entity.reset_index()
         entity = entity.sort_values(by='entity_count', ascending=False)
+        entity = entity.reset_index(drop=True)
 
         self.source['entity'].data = {
             'Terms': entity['entity_clean'],
@@ -96,6 +98,7 @@ class default():
         entity = entity.rename(columns={'entity_clean': 'entity_count', 'document': 'document_count'})
         entity = entity.reset_index()
         entity = entity.sort_values(by='entity_count', ascending=False)
+        entity = entity.reset_index(drop=True)
         # TODO: rename for clarity (plot_term function also needs adjustent)
         self.source['entity_label'].data = {
             'Terms': entity['entity_label'],
