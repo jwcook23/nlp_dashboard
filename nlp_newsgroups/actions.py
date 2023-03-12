@@ -230,18 +230,16 @@ class actions(model, default):
             return
         
         selected_terms = self.source['entity'].data['Terms'].iloc[row_source]
-        labeled_entity = self.entity['summary'].loc[
-            self.entity['summary']['entity_clean'].isin(selected_terms), ['entity_label', 'entity_clean']
+        document_idx = self.entity['terms'].loc[
+            self.entity['terms']['entity_clean'].isin(selected_terms), 'document'
+        ].drop_duplicates()
+        labeled_entity = self.entity['terms'][
+            self.entity['terms']['document'].isin(document_idx)
         ]
-        labeled_entity = labeled_entity.merge(
-            self.entity['terms'], on=['entity_label', 'entity_clean']
-        )
 
         self.default_selections(event='selected_entity', ignore=pd.Series(['entity','entity_label']))
 
         sample_title = self.title['entity'].text
-
-        document_idx = labeled_entity['document']
 
         text = self.data_input[document_idx]
 
