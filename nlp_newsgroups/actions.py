@@ -28,9 +28,13 @@ class actions(model, default):
         # TODO: differentiate these tags
         self.html = {
             'stopwords': ('<s>', '</s>'),
-            'selected_terms': ('<strong><font color="red">', '</font></strong>'),
+            # 'selected_terms': ('<strong><font color="red">', '</strong></font>'),
+            'selected_terms': ('<u>', '</u>'),
             'topic_terms': ('<strong>', '</strong>'),
-            'labeled_entity': ('<strong><font color="blue">', '</font></strong>')
+            'topic_terms': ('<span style="background-color:cadetblue">', '</span><sup>\g<1></sup>'),
+            # 'labeled_entity': ('<strong><font color="blue">', '</font></strong>')
+            # 'labeled_entity': ('<span style="border-width:1px; border-style:solid; border-color:#FF0000; padding: 1em;">', '</span>')
+            'labeled_entity': ('<span style="background-color:coral">', '</span><sup>\g<1></sup>')
         }
 
 
@@ -116,7 +120,7 @@ class actions(model, default):
 
         self.selected_sample(None, None, self.sample_number.value)
 
-
+    # TODO: delete
     def find_text(self, tokens, pattern):
 
         if pattern is None:
@@ -131,7 +135,7 @@ class actions(model, default):
 
         return indices
     
-
+    # TODO: delete
     def apply_html(self, text, terms, formatter):
     
         if terms is None:
@@ -144,6 +148,37 @@ class actions(model, default):
             text[idx_end] = f"{text[idx_end]}{self.html[formatter][1]}"
 
         return text
+    
+
+    def highlight_terms(self, text, terms, formatter):
+
+        pattern = terms.apply(lambda x: re.escape(x))
+        pattern = r'\b'+pattern+r'\b'
+        pattern = '|'.join(pattern)
+        pattern = f'({pattern})'
+        replace = f'{self.html[formatter][0]}\g<1>{self.html[formatter][1]}'
+        text = re.sub(pattern, replace, text, flags=re.IGNORECASE)
+
+        return text
+    
+
+    def replace_label(self, text, labels, pattern, replace):
+
+
+        labels = labels[[pattern,replace]].drop_duplicates()
+
+        labels = labels.groupby(pattern).agg({replace: list})
+        labels[replace] = labels[replace].apply(lambda x: ','.join(x))
+
+        labels.index = '<sup>'+labels.index+'</sup>'
+        labels[replace] = '<sup>'+labels[replace]+'</sup>'
+        labels = labels[replace]
+        labels = labels.to_dict()
+
+        regex = re.compile("(%s)" % "|".join(map(re.escape, labels.keys())))
+        text = regex.sub(lambda mo: labels[mo.string[mo.start():mo.end()]], text)
+
+        return text
 
 
     def selected_sample(self, attr, old, new):
@@ -151,30 +186,59 @@ class actions(model, default):
         if self.sample_text is not None:
 
             text = self.sample_text.iloc[new]
+            document_idx = self.sample_text.index[self.sample_number.value]
 
-            pattern = self.model_params['token_pattern']
-            pattern = '[^'+pattern+']'
-            tokens = re.sub(pattern, ' ', text)
+            # TODO: refactor for clarity
+            document_topic_terms = self.topic['Distribution'][
+                (self.topic['Distribution'].index==document_idx) &
+                (self.topic['Distribution']['Confidence']>0)
+            ]
+            document_topic_terms = self.topic['summary'].loc[
+                (self.topic['summary']['Topic'].isin(document_topic_terms['Topic'])) & (self.topic['summary']['Weight']>0)
+            ]
+            document_topic_terms = document_topic_terms[
+                document_topic_terms['Term'].isin(
+                        self.topic['terms'][
+                            self.topic['features'][document_idx,:].nonzero()[1]
+                        ]
+                )
+            ]
+
+            document_entity_labels = self.sample_entity_labels[
+                self.sample_entity_labels['document']==document_idx
+            ]
 
             # BUG: how to handle overlapping patterns?
-            stopword_terms = self.find_text(tokens, self.model_params['stop_words'])
-            selected_terms = self.find_text(tokens, self.sample_selected_terms)
-            # TODO: highlight name of topic
-            topic_terms = self.find_text(tokens, self.sample_topic_terms)
-            # TODO: highlight label of entity
-            if self.sample_entity_labels is None:
-                labeled_entity = None
-            else:
-                labeled_entity = self.find_text(tokens, self.sample_entity_labels['entity_text'])
+            text = self.highlight_terms(text, self.model_params['stop_words'], 'stopwords')
+            text = self.highlight_terms(text, self.sample_selected_terms, 'selected_terms')
+            text = self.highlight_terms(text, document_topic_terms['Term'], 'topic_terms')
+            text = self.highlight_terms(text, document_entity_labels['entity_text'], 'labeled_entity')
 
-            text = list(text)
+            text = self.replace_label(text, document_topic_terms, 'Term', 'Topic')
+            text = self.replace_label(text, document_entity_labels, 'entity_text', 'entity_label')
 
-            text = self.apply_html(text, stopword_terms, 'stopwords')
-            text = self.apply_html(text, selected_terms, 'selected_terms')
-            text = self.apply_html(text, topic_terms, 'topic_terms')
-            text = self.apply_html(text, labeled_entity, 'labeled_entity')
+            # TODO: delete
+            # pattern = self.model_params['token_pattern']
+            # pattern = '[^'+pattern+']'
+            # tokens = re.sub(pattern, ' ', text)
 
-            text = ''.join(text)
+            # stopword_terms = self.find_text(tokens, self.model_params['stop_words'])
+            # selected_terms = self.find_text(tokens, self.sample_selected_terms)
+            # topic_terms = self.find_text(tokens, self.sample_topic_terms)
+            # if self.sample_entity_labels is None:
+            #     labeled_entity = None
+            # else:
+            #     labeled_entity = self.find_text(tokens, self.sample_entity_labels['entity_text'])
+
+            # # TODO: remove loops for performance on long text
+            # text = list(text)
+
+            # text = self.apply_html(text, stopword_terms, 'stopwords')
+            # text = self.apply_html(text, selected_terms, 'selected_terms')
+            # text = self.apply_html(text, topic_terms, 'topic_terms')
+            # text = self.apply_html(text, labeled_entity, 'labeled_entity')
+
+            # text = ''.join(text)
 
             self.sample_document.text = text
 

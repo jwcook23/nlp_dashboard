@@ -19,6 +19,7 @@ import pickle
 
 # # print(nlp.pipe_labels['ner'])
 
+
 # terms = pd.DataFrame()
 # time_start = time.time()
 # for idx,doc in enumerate(docs):
@@ -37,6 +38,14 @@ import pickle
 #     terms = pd.concat([terms, df], ignore_index=True)
 # time_end = time.time()
 # print(f'Finished in {time_end-time_start} seconds')
+
+# BUG: multiple & duplicate entity_labels for entity_text per document
+# multiple = terms.groupby(['document','entity_text'])
+# multiple = multiple.agg({'entity_label': 'unique'})
+# multiple = multiple[multiple['entity_label'].str.len()>1]
+# duplicate = self.entity['terms'].groupby(['document','entity_text','entity_label'])
+# duplicate = duplicate.size()
+# duplicate = duplicate[duplicate.size()>1]
 
 # terms['entity_clean'] = terms['entity_text'].str.replace(r'[^a-zA-Z0-9 ]', ' ', regex=True)
 # terms['entity_clean'] = terms['entity_clean'].str.replace(r'\s{2,}',' ', regex=True)
