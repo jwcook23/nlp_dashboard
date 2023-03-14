@@ -29,7 +29,7 @@ class actions(model, default):
             'stopwords': ('<s>', '</s>'),
             'selected_terms': ('<u>', '</u>'),
             'topic_terms': ('<span style="background-color:coral">', '</span>'),
-            'labeled_entity': ('<strong>', '</strong><sup>\g<1></sup>')
+            'labeled_entity': ('<strong>', '<sup>Entity Label</sup>')
         }
 
 
@@ -100,11 +100,11 @@ class actions(model, default):
 
         self.title['sample'].text = f'Example Documents:<br>{sample_title}'
         self.sample_legend.text = f'''
-        <u>Legend:</u><br>
+        <font size="2"><strong><u>Legend:</u></strong><br></font>
         {self.html_tag['selected_terms'][0]}Selected Term{self.html_tag['selected_terms'][1]}<br>
         {self.html_tag['stopwords'][0]}Stop Words{self.html_tag['stopwords'][1]}<br>
         {self.html_tag['topic_terms'][0]}Topic Terms{self.html_tag['topic_terms'][1]}<br>
-        {self.html_tag['labeled_entity'][0]}Labeled Entity{self.html_tag['labeled_entity'][1]}
+        {self.html_tag['labeled_entity'][0]}Entity Name{self.html_tag['labeled_entity'][1]}
         '''
         self.sample_number.title = f'Document Sample #: {len(text)} total'
         self.sample_number.high = len(text)-1
@@ -125,7 +125,7 @@ class actions(model, default):
         pattern = pattern.replace(r'\\ ', '.+', regex=True)
         pattern = r'\b('+pattern+r')\b'
         pattern = '|'.join(pattern)
-        replace = f'{self.html_tag[formatter][0]}\g<1>{self.html_tag[formatter][1]}'
+        replace = f'{self.html_tag[formatter][0]}\g<0>{self.html_tag[formatter][1]}'
 
         text = re.sub(pattern, replace, text, flags=re.IGNORECASE)
 
@@ -159,7 +159,6 @@ class actions(model, default):
 
         text = list(text)
 
-        # TODO: use index of entity chars
         document = self.sample_entity_labels[
             self.sample_entity_labels['document_idx']==document_idx
         ]
@@ -187,7 +186,7 @@ class actions(model, default):
             if self.sample_selected_terms is not None:
                 text = self.highlight_terms(text, self.sample_selected_terms, 'selected_terms')
 
-            self.highlight_topics(text, document_idx)
+            text = self.highlight_topics(text, document_idx)
        
             self.sample_document.text = text
 
