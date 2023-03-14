@@ -94,8 +94,8 @@ class default():
         entity = self.entity['terms']
 
         entity = entity.groupby('entity_label')
-        entity = entity.agg({'entity_clean': 'nunique', 'document': 'nunique'})
-        entity = entity.rename(columns={'entity_clean': 'entity_count', 'document': 'document_count'})
+        entity = entity.agg({'entity_clean': 'nunique', 'document_idx': 'nunique'})
+        entity = entity.rename(columns={'entity_clean': 'entity_count', 'document_idx': 'document_count'})
         entity = entity.reset_index()
         entity = entity.sort_values(by='entity_count', ascending=False)
         entity = entity.reset_index(drop=True)
@@ -141,6 +141,7 @@ class default():
 
     def default_topics_distribution(self):
 
+        self.figure['topic_distribution'].title.text = 'Select in Topic Summary or Predict Topic to Display'
         self.figure['topic_distribution'].x_range.factors = []
         if self.figure['topic_distribution'].renderers:
             self.figure['topic_distribution'].renderers = []

@@ -47,6 +47,29 @@ class dashboard(plot):
         }
         space = Div(width=10)
 
+        self.tabs_topics = Tabs(tabs=[
+            TabPanel(child=column(
+                row(self.set_topic_name, self.input['topic_name'], self.input['topic_description']),
+                self.figure['topics']
+            ), title='Topic Summary'),
+            TabPanel(
+                child=row(
+                    self.predict['calculate'],
+                    self.predict['input'],
+                    self.predict['figure']
+                ),
+                title='Topic Prediction'
+            ),
+            TabPanel(
+                child=column(
+                    self.input['topic_distribution_range'],
+                    self.figure['topic_distribution']
+                ),
+                title='Topic Term Importance'
+            )
+        ])
+
+
         self.layout = column(
             row(
                 row(self.title['main'], column(self.input['recalculate'], self.input['save'], self.input['reset']), space),
@@ -73,24 +96,7 @@ class dashboard(plot):
                 ),
                 column(
                     self.title['topics'],
-                    Tabs(tabs=[
-                        TabPanel(child=column(
-                            row(self.set_topic_name, self.input['topic_name'], self.input['topic_description']),
-                            self.figure['topics']
-                        ), title='Topic Summary'),
-                        TabPanel(
-                            child=row(
-                                self.predict['calculate'],
-                                self.predict['input'],
-                                self.predict['figure']
-                            ),
-                            title='Topic Prediction'
-                        )
-                    ]),
-                    column(
-                        row(self.title['topic_distribution'], self.input['topic_distribution_range']), 
-                        self.figure['topic_distribution']
-                    )
+                    self.tabs_topics
                 )
             ),
             column(

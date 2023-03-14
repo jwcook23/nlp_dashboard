@@ -96,7 +96,6 @@ class plot(data, actions):
             'entity': Div(text='Entity Name', styles={'font-weight': 'bold'}, width=75),
             'entity_label': Div(text='Entity Label', styles={'font-weight': 'bold'}, width=75),
             'topics': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
-            'topic_distribution': Div(text='Selected Topic Term Importance (all terms)', styles={'font-weight': 'bold'}, width=275),
             'sample': Div(text='', styles={'font-weight': 'bold', 'font-size': '125%'}, width=250)
         }
 

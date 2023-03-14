@@ -27,12 +27,8 @@ class actions(model, default):
 
         self.html_tag = {
             'stopwords': ('<s>', '</s>'),
-            # 'selected_terms': ('<strong><font color="red">', '</strong></font>'),
             'selected_terms': ('<u>', '</u>'),
-            # 'topic_terms': ('<strong>', '</strong>'),
             'topic_terms': ('<span style="background-color:coral">', '</span>'),
-            # 'labeled_entity': ('<strong><font color="blue">', '</font></strong>')
-            # 'labeled_entity': ('<span style="border-width:1px; border-style:solid; border-color:#FF0000; padding: 1em;">', '</span>')
             'labeled_entity': ('<strong>', '</strong><sup>\g<1></sup>')
         }
 
@@ -122,31 +118,56 @@ class actions(model, default):
 
     def highlight_terms(self, text, terms, formatter):
 
+        if len(terms)==0:
+            return text
+
         pattern = terms.apply(lambda x: re.escape(x))
-        pattern = r'\b'+pattern+r'\b'
+        pattern = pattern.replace(r'\\ ', '.+', regex=True)
+        pattern = r'\b('+pattern+r')\b'
         pattern = '|'.join(pattern)
-        pattern = f'({pattern})'
         replace = f'{self.html_tag[formatter][0]}\g<1>{self.html_tag[formatter][1]}'
+
         text = re.sub(pattern, replace, text, flags=re.IGNORECASE)
 
         return text
-    
+        
 
-    def replace_superscript(self, text, labels, pattern, replace):
+    def highlight_topics(self, text, document_idx):
+
+        # TODO: color by topic
+        document = self.topic['Distribution'][
+            (self.topic['Distribution'].index==document_idx) &
+            (self.topic['Distribution']['Confidence']>0)
+        ]
+        document = self.topic['summary'].loc[
+            (self.topic['summary']['Topic'].isin(document['Topic'])) & (self.topic['summary']['Weight']>0)
+        ]
+        document = document[
+            document['Term'].isin(
+                    self.topic['terms'][
+                        self.topic['features'][document_idx,:].nonzero()[1]
+                    ]
+            )
+        ]
+
+        text = self.highlight_terms(text, document['Term'], 'topic_terms')
+
+        return text
 
 
-        labels = labels[[pattern,replace]].drop_duplicates()
+    def highlight_entities(self, text, document_idx):
 
-        labels = labels.groupby(pattern).agg({replace: list})
-        labels[replace] = labels[replace].apply(lambda x: ','.join(x))
+        text = list(text)
 
-        labels.index = '<sup>'+labels.index+'</sup>'
-        labels[replace] = '<sup>'+labels[replace]+'</sup>'
-        labels = labels[replace]
-        labels = labels.to_dict()
+        # TODO: use index of entity chars
+        document = self.sample_entity_labels[
+            self.sample_entity_labels['document_idx']==document_idx
+        ]
+        for document_idx, row in document.iterrows():
+            text[row['start_char']] = f"<strong>{text[row['start_char']]}"
+            text[row['end_char']-1] = f"{text[row['end_char']-1]}</strong><sup>{row['entity_label']}</sup>"
 
-        regex = re.compile("(%s)" % "|".join(map(re.escape, labels.keys())))
-        text = regex.sub(lambda mo: labels[mo.string[mo.start():mo.end()]], text)
+        text = ''.join(text) 
 
         return text
 
@@ -158,36 +179,16 @@ class actions(model, default):
             text = self.sample_text.iloc[new]
             document_idx = self.sample_text.index[self.sample_number.value]
 
-            # TODO: refactor for clarity
-            document_topic_terms = self.topic['Distribution'][
-                (self.topic['Distribution'].index==document_idx) &
-                (self.topic['Distribution']['Confidence']>0)
-            ]
-            document_topic_terms = self.topic['summary'].loc[
-                (self.topic['summary']['Topic'].isin(document_topic_terms['Topic'])) & (self.topic['summary']['Weight']>0)
-            ]
-            document_topic_terms = document_topic_terms[
-                document_topic_terms['Term'].isin(
-                        self.topic['terms'][
-                            self.topic['features'][document_idx,:].nonzero()[1]
-                        ]
-                )
-            ]
-
-            document_entity_labels = self.sample_entity_labels[
-                self.sample_entity_labels['document']==document_idx
-            ]
+            if self.sample_entity_labels is not None:
+                text = self.highlight_entities(text, document_idx)
 
             text = self.highlight_terms(text, self.model_params['stop_words'], 'stopwords')
-            text = self.highlight_terms(text, self.sample_selected_terms, 'selected_terms')
-            text = self.highlight_terms(text, document_topic_terms['Term'], 'topic_terms')
-            text = self.highlight_terms(text, document_entity_labels['entity_text'], 'labeled_entity')
 
-            # TODO: color by topic
-            # text = self.replace_label(text, document_topic_terms, 'Term', 'Topic')
+            if self.sample_selected_terms is not None:
+                text = self.highlight_terms(text, self.sample_selected_terms, 'selected_terms')
 
-            text = self.replace_superscript(text, document_entity_labels, 'entity_text', 'entity_label')
-
+            self.highlight_topics(text, document_idx)
+       
             self.sample_document.text = text
 
 
@@ -217,7 +218,9 @@ class actions(model, default):
 
         # TODO: show distribution of term importance
         topic_terms = self.topic['terms']
-        labeled_entity = self.entity['terms'].loc[document_idx,['entity_text','entity_label']]
+        labeled_entity = self.entity['terms'].loc[
+            self.entity['terms']['document_idx'].isin(document_idx)
+        ]
         self.set_samples(sample_title, text, selected_terms, topic_terms, labeled_entity)
 
 
@@ -243,10 +246,10 @@ class actions(model, default):
         
         selected_terms = self.source['entity'].data['Terms'].iloc[row_source]
         document_idx = self.entity['terms'].loc[
-            self.entity['terms']['entity_clean'].isin(selected_terms), 'document'
+            self.entity['terms']['entity_clean'].isin(selected_terms), 'document_idx'
         ].drop_duplicates()
         labeled_entity = self.entity['terms'][
-            self.entity['terms']['document'].isin(document_idx)
+            self.entity['terms']['document_idx'].isin(document_idx)
         ]
 
         self.default_selections(event='selected_entity', ignore=pd.Series(['entity','entity_label']))
@@ -283,9 +286,9 @@ class actions(model, default):
         topic_terms = topic_terms.merge(self.topic['summary'], on=['Topic','Term'])
         topic_terms = topic_terms[topic_terms['Weight']>0]
 
-        topics = topic_terms['Topic'].drop_duplicates()
-        topics = f"Predicted Topics {', '.join(topics)}"
-        self.set_topics_distribution(topics, topic_terms)
+        title = topic_terms['Topic'].drop_duplicates()
+        title = f"Predicted Topics = {', '.join(title)}"
+        self.set_topics_distribution(title, topic_terms)
         
         self.set_samples('Topic Prediction', text, None, topic_terms['Term'], None)
 
@@ -315,6 +318,10 @@ class actions(model, default):
 
 
     def set_topics_distribution(self, title_text, topic_terms):
+
+        self.tabs_topics.active = 2
+
+        self.figure['topic_distribution'].title.text = title_text
 
         self.topic_distribution_factors = topic_terms['Term'].drop_duplicates().tolist()
         self.figure['topic_distribution'].x_range.factors = self.topic_distribution_factors
@@ -372,10 +379,13 @@ class actions(model, default):
 
         text = self.data_input[document_idx]
 
-        self.set_topics_distribution(self.topic_number, topic_terms)
-        labeled_entity = self.entity['terms'].loc[document_idx,['entity_text','entity_label']]
         title = f'Selected Topic = {self.topic_number}'
-        
+
+        self.set_topics_distribution(title, topic_terms)
+        labeled_entity = self.entity['terms'].loc[
+            self.entity['terms']['document_idx'].isin(document_idx)
+        ]
+
         self.set_samples(title, text, None, topic_terms['Term'], labeled_entity)
 
 
