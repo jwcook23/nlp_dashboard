@@ -116,20 +116,33 @@ class actions(model, default):
         self.selected_sample(None, None, self.sample_number.value)
 
 
-    def highlight_terms(self, text, terms, formatter):
-
-        if len(terms)==0:
-            return text
+    def search_pattern(self, terms):
 
         pattern = terms.apply(lambda x: re.escape(x))
         pattern = pattern.replace(r'\\ ', '.+', regex=True)
         pattern = r'\b('+pattern+r')\b'
         pattern = '|'.join(pattern)
+
+        return pattern
+
+
+    def surround_html_tag(self, text, terms, formatter):
+
+        if len(terms)==0:
+            return text
+
+        pattern = self.search_pattern(terms)
+
         replace = f'{self.html_tag[formatter][0]}\g<0>{self.html_tag[formatter][1]}'
 
         text = re.sub(pattern, replace, text, flags=re.IGNORECASE)
 
         return text
+    
+
+    def lookup_html_tag(self, text, terms):
+
+        pass
         
 
     def highlight_topics(self, text, document_idx):
@@ -150,7 +163,20 @@ class actions(model, default):
             )
         ]
 
-        text = self.highlight_terms(text, document['Term'], 'topic_terms')
+        pattern = self.search_pattern(document['Term'])
+        
+        lookup = pd.DataFrame({
+            'Topic': self.topic_color.transform.factors, 
+            'Color': self.topic_color.transform.palette
+        })
+        lookup = lookup.merge(document[['Topic','Term']], on='Topic')
+        if len(lookup)!=len(document):
+            raise NotImplementedError('terms belonging to multiple topics (unablet to blend colors)')
+        lookup = lookup.drop(columns='Topic').set_index('Term')
+        lookup = lookup['Color'].to_dict()
+
+        color = lambda m: f'<span style="background-color:{lookup[m.group().lower()]}">{m.group()}</span>'
+        text = re.sub(pattern, color, text, flags=re.IGNORECASE)
 
         return text
 
@@ -181,10 +207,10 @@ class actions(model, default):
             if self.sample_entity_labels is not None:
                 text = self.highlight_entities(text, document_idx)
 
-            text = self.highlight_terms(text, self.model_params['stop_words'], 'stopwords')
+            text = self.surround_html_tag(text, self.model_params['stop_words'], 'stopwords')
 
             if self.sample_selected_terms is not None:
-                text = self.highlight_terms(text, self.sample_selected_terms, 'selected_terms')
+                text = self.surround_html_tag(text, self.sample_selected_terms, 'selected_terms')
 
             text = self.highlight_topics(text, document_idx)
        
