@@ -1,5 +1,9 @@
+import os
+import pickle
+
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.decomposition import NMF, MiniBatchNMF, LatentDirichletAllocation
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 import pandas as pd
 import numpy as np
 
@@ -7,18 +11,74 @@ from nlp_newsgroups import performance
 
 class model():
 
-    def __init__(self, token_pattern, max_df, min_df, stop_words, num_features, ngram_range, topic_num, topic_approach):
+    def __init__(self):
 
-        self.model_params = {
-            'token_pattern': token_pattern,
-            'max_df': max_df,
-            'min_df': min_df,
-            'stop_words': stop_words,
-            'num_features': num_features,
-            'ngram_range': ngram_range,
-            'topic_num': topic_num,
-            'topic_approach': topic_approach
-        }
+        self.model_topic_fname = 'model_topic.pkl'
+        self.model_ner_fname = 'model_ner.pkl'
+
+        self.load_model()
+
+
+    def load_model(self):
+
+        # TODO: build handling for NER
+        with open(self.model_ner_fname, 'rb') as _fh:
+            terms, summary = pickle.load(_fh)
+            self.entity = {'terms': terms, 'summary': summary}
+
+        # BUG: check if slider parameters changed
+        if os.path.isfile(self.model_topic_fname):
+            with open(self.model_topic_fname, 'rb') as _fh:
+                self.model_params, self.ngram, self.topic = pickle.load(_fh)
+        else:
+            self.calculate_model()
+
+
+    def calculate_model(self, input_params={}):
+
+        params_changed = len(input_params)>0
+
+        if not input_params:
+            input_params = {key:val.value for key,val in self.model_inputs.items()}
+            input_params['stop_words'] = pd.Series(list(ENGLISH_STOP_WORDS))
+            self.model_params = input_params
+
+        self.get_ngram(self.data_input)
+        self.get_topics(self.data_input)
+
+        if params_changed:
+            self.default_figures(None)
+        else:
+            self.save_model(None)
+
+
+    def save_model(self, event):
+
+        with open(self.model_topic_fname, 'wb') as _fh:
+            pickle.dump([self.model_params, self.ngram, self.topic], _fh)
+
+
+    def recalculate_model(self, event):
+
+        input_params = {key: val.value for key,val in self.model_inputs.items()}
+        
+        stopwords = pd.Series(input_params['stop_words'].split(','))
+        stopwords = stopwords.str.lower()
+        stopwords = stopwords.str.strip()
+        input_params['stop_words'] = pd.concat([self.model_params['stop_words'], stopwords], ignore_index=True)
+
+        compare = [key for key in input_params.keys() if key !='stop_words']
+        change_params = [key for key in compare if input_params[key] != self.model_params[key]]
+        if (input_params['stop_words'].isin(self.model_params['stop_words']) == False).any():
+            change_params += ['stop_words']
+        change_params = [self.model_inputs[key].title for key in change_params]
+        change_params = ', '.join(change_params)
+
+        if change_params:
+
+            self.model_inputs['stop_words'].value = ""
+
+            self.calculate_model(input_params)
 
 
     @performance.timing

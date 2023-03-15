@@ -1,29 +1,17 @@
 import re
-import os
-import pickle
 from math import floor, ceil
 
 import pandas as pd
-from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+
 from bokeh.models import Legend
 
-from nlp_newsgroups.model import model
 from nlp_newsgroups.default import default
 
-class actions(model, default):
+class actions(default):
 
     def __init__(self):
 
         default.__init__(self)
-
-        self.model_topic_fname = 'model_topic.pkl'
-        self.model_ner_fname = 'model_ner.pkl'
-
-        # TODO: build handling for NER
-        with open(self.model_ner_fname, 'rb') as _fh:
-            terms, summary = pickle.load(_fh)
-
-            self.entity = {'terms': terms, 'summary': summary}
 
         self.html_tag = {
             'stopwords': ('<s>', '</s>'),
@@ -33,67 +21,10 @@ class actions(model, default):
         }
 
 
-    def model_cache(self, input_params={}):
-
-        cache_exists = os.path.isfile(self.model_topic_fname)
-        params_changed = len(input_params)>0
-
-        if not cache_exists or input_params:
-
-            if not input_params:
-                input_params = {key:val.value for key,val in self.model_inputs.items()}
-                input_params['stop_words'] = pd.Series(list(ENGLISH_STOP_WORDS))
-
-            # BUG: check if slider parameters changed
-            model.__init__(self, **input_params)
-
-            self.get_ngram(self.data_input)
-            self.get_topics(self.data_input)
-
-            if params_changed:
-                self.default_figures(None)
-
-            if not params_changed:
-                self.save_model(None)
-    
-        else:
-            with open(self.model_topic_fname, 'rb') as _fh:
-                self.model_params, self.ngram, self.topic = pickle.load(_fh)
-
-
-    def save_model(self, event):
-
-        with open(self.model_topic_fname, 'wb') as _fh:
-            pickle.dump([self.model_params, self.ngram, self.topic], _fh)
-
-
     def set_status(self, message):
 
         # BUG: emit status message before callbacks complete
         self.status_message.text = message
-
-
-    def recalculate_model(self, event):
-
-        input_params = {key: val.value for key,val in self.model_inputs.items()}
-        
-        stopwords = pd.Series(input_params['stop_words'].split(','))
-        stopwords = stopwords.str.lower()
-        stopwords = stopwords.str.strip()
-        input_params['stop_words'] = pd.concat([self.model_params['stop_words'], stopwords], ignore_index=True)
-
-        compare = [key for key in input_params.keys() if key !='stop_words']
-        change_params = [key for key in compare if input_params[key] != self.model_params[key]]
-        if (input_params['stop_words'].isin(self.model_params['stop_words']) == False).any():
-            change_params += ['stop_words']
-        change_params = [self.model_inputs[key].title for key in change_params]
-        change_params = ', '.join(change_params)
-
-        if change_params:
-
-            self.model_inputs['stop_words'].value = ""
-
-            self.model_cache(input_params)
 
 
     def set_samples(self, sample_title, text, selected_terms, topic_terms, labeled_entity):
@@ -138,12 +69,7 @@ class actions(model, default):
         text = re.sub(pattern, replace, text, flags=re.IGNORECASE)
 
         return text
-    
-
-    def lookup_html_tag(self, text, terms):
-
-        pass
-        
+            
 
     def highlight_topics(self, text, document_idx):
 
@@ -152,6 +78,11 @@ class actions(model, default):
             (self.topic['Distribution'].index==document_idx) &
             (self.topic['Distribution']['Confidence']>0)
         ]
+        if len(document)==0:
+            return text
+        
+        if len(document)>1:
+            raise NotImplementedError('unable to color multiple topics for a document')
         document = self.topic['summary'].loc[
             (self.topic['summary']['Topic'].isin(document['Topic'])) & (self.topic['summary']['Weight']>0)
         ]
@@ -170,8 +101,6 @@ class actions(model, default):
             'Color': self.topic_color.transform.palette
         })
         lookup = lookup.merge(document[['Topic','Term']], on='Topic')
-        if len(lookup)!=len(document):
-            raise NotImplementedError('terms belonging to multiple topics (unablet to blend colors)')
         lookup = lookup.drop(columns='Topic').set_index('Term')
         lookup = lookup['Color'].to_dict()
 
@@ -260,8 +189,6 @@ class actions(model, default):
         ]
 
         self.set_entity(entity)
-
-        # raise NotImplementedError('selected_entity_label not implemented')
 
 
     def selected_entity(self, row_source):

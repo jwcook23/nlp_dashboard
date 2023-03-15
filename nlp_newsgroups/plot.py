@@ -12,31 +12,29 @@ import pandas as pd
 from squarify import normalize_sizes, squarify
 
 from nlp_newsgroups.data import data
+from nlp_newsgroups.model import model
 from nlp_newsgroups.actions import actions
 
-class plot(data, actions):
+class plot(data, model, actions):
 
 
     def __init__(self):
-
-        data.__init__(self)
-        actions.__init__(self)
-
-        self.data_input = self.data_all['text']
 
         self.figure = {}
         self.source = {}
         self.glyph = {}
         self.input = {'axis_range': {}}
 
+        data.__init__(self)
+        self.data_input = self.data_all['text']
+
         self.user_inputs()
 
-        self.model_cache()
+        model.__init__(self)
+        actions.__init__(self)
 
         self.plot_titles()
         
-        self.status_message = Div(text='')
-
         # TODO: rename plot_term to something like plot_ybar & fig_height var name
         self.plot_term('ngram')
         self.plot_term('entity', fig_height=350)
@@ -46,6 +44,9 @@ class plot(data, actions):
         self.plot_assignment()
         self.predict_topics()
         self.plot_samples()
+
+        # TODO: implement real time status message
+        self.status_message = Div(text='')
 
 
     def user_inputs(self):
