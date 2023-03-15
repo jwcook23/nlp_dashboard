@@ -13,9 +13,9 @@ from squarify import normalize_sizes, squarify
 
 from nlp_newsgroups.data import data
 from nlp_newsgroups.model import model
-from nlp_newsgroups.actions import actions
+from nlp_newsgroups.selections import selections
 
-class plot(data, model, actions):
+class plot(data, model, selections):
 
 
     def __init__(self):
@@ -31,22 +31,18 @@ class plot(data, model, actions):
         self.user_inputs()
 
         model.__init__(self)
-        actions.__init__(self)
+        selections.__init__(self)
 
         self.plot_titles()
         
-        # TODO: rename plot_term to something like plot_ybar & fig_height var name
-        self.plot_term('ngram')
-        self.plot_term('entity', fig_height=350)
-        self.plot_term('entity_label', fig_height=150)
+        self.plot_ybar('ngram')
+        self.plot_ybar('entity', fig_height=350)
+        self.plot_ybar('entity_label', fig_height=150)
         self.plot_topics_terms()
         self.plot_topics_distribution()
         self.plot_assignment()
         self.predict_topics()
         self.plot_samples()
-
-        # TODO: implement real time status message
-        self.status_message = Div(text='')
 
 
     def user_inputs(self):
@@ -144,7 +140,7 @@ class plot(data, model, actions):
         self.default_samples()
 
 
-    def plot_term(self, fig_name: Literal = ['ngram','entity','entity_label'], fig_height=550):
+    def plot_ybar(self, fig_name: Literal = ['ngram','entity','entity_label'], fig_height=550):
 
         self.figure[fig_name] = figure(
             height=fig_height, width=350, toolbar_location=None, tools="tap", 
