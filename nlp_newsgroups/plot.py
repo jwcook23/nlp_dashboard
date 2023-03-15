@@ -39,6 +39,7 @@ class plot(data, model, selections):
         self.plot_ybar('entity', fig_height=350)
         self.plot_ybar('entity_label', fig_height=150)
         self.plot_topics_terms()
+        self.plot_topics_confidence()
         self.plot_topics_distribution()
         self.plot_assignment()
         self.predict_topics()
@@ -206,6 +207,21 @@ class plot(data, model, selections):
         )
 
 
+    def plot_topics_confidence(self):
+
+        self.source['topic_confidence'] = ColumnDataSource({'Topic':[], 'Confidence':[]})
+
+        # TODO: rename title
+        self.figure['topic_confidence'] = figure(
+            y_range=self.topic_color.transform.factors, width=300, height=250, title='Topic Prediction',
+            x_axis_label='Confidence', toolbar_location=None
+        )
+
+        self.figure['topic_confidence'].hbar(
+            y='Topic', right='Confidence', source=self.source['topic_confidence'], fill_color=self.topic_color
+        )
+
+
     def plot_topics_distribution(self):
 
         self.figure['topic_distribution'] = figure(
@@ -235,15 +251,4 @@ class plot(data, model, selections):
         self.predict['input'] = TextAreaInput(
             value="Baseball season is over. so I'll have more time put my new hard drive in.",
             width=300, height=250, title='Predict topic for input text.'
-        )
-
-        self.predict['source'] = ColumnDataSource({'Topic':[], 'Confidence':[]})
-
-        self.predict['figure'] = figure(
-            y_range=self.topic_color.transform.factors, width=300, height=250, title='Topic Prediction',
-            x_axis_label='Confidence', toolbar_location=None
-        )
-
-        self.predict['renderer'] = self.predict['figure'].hbar(
-            y='Topic', right='Confidence', source=self.predict['source'], fill_color=self.topic_color
         )

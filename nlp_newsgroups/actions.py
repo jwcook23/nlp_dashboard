@@ -15,9 +15,9 @@ class actions(default):
 
         self.html_tag = {
             'stopwords': ('<s>', '</s>'),
-            'selected_terms': ('<u>', '</u>'),
-            'topic_terms': ('<span style="background-color:coral">', '</span>'),
-            'labeled_entity': ('<strong>', '<sup>Entity Label</sup>')
+            'selected_terms': ('<u>', '</u>')
+            # 'topic_terms': ('<span style="background-color:coral">', '</span>'),
+            # 'labeled_entity': ('<strong>', '<sup>Entity Label</sup>')
         }
 
 
@@ -34,8 +34,8 @@ class actions(default):
         <font size="2"><strong><u>Legend:</u></strong><br></font>
         {self.html_tag['selected_terms'][0]}Selected Term{self.html_tag['selected_terms'][1]}<br>
         {self.html_tag['stopwords'][0]}Stop Words{self.html_tag['stopwords'][1]}<br>
-        {self.html_tag['topic_terms'][0]}Topic Terms{self.html_tag['topic_terms'][1]}<br>
-        {self.html_tag['labeled_entity'][0]}Entity Name{self.html_tag['labeled_entity'][1]}
+        Topic Terms (color = topic name)<br>
+        <strong>Entity Name</strong><sup>Entity Label</sup>
         '''
         self.sample_number.title = f'Document Sample #: {len(text)} total'
         self.sample_number.high = len(text)-1
@@ -71,21 +71,20 @@ class actions(default):
         return text
             
 
-    def highlight_topics(self, text, document_idx):
+    def find_topic_terms(self, document_idx):
 
-        # TODO: color by topic
-        document = self.topic['Distribution'][
-            (self.topic['Distribution'].index==document_idx) &
-            (self.topic['Distribution']['Confidence']>0)
+        document = self.topic['Distribution'].loc[
+            (self.topic['Distribution'].index==document_idx) & (self.topic['Distribution']['Confidence']>0),
+            ['Topic','Confidence']
         ]
-        if len(document)==0:
-            return text
+
         
-        if len(document)>1:
-            raise NotImplementedError('unable to color multiple topics for a document')
-        document = self.topic['summary'].loc[
-            (self.topic['summary']['Topic'].isin(document['Topic'])) & (self.topic['summary']['Weight']>0)
-        ]
+        # if len(document)>1:
+        #     raise NotImplementedError('unable to color multiple topics for a document')
+
+        document = document.merge(self.topic['summary'][['Topic','Term','Weight']], on='Topic')
+        document = document[document['Weight']>0]
+
         document = document[
             document['Term'].isin(
                     self.topic['terms'][
@@ -94,8 +93,11 @@ class actions(default):
             )
         ]
 
-        pattern = self.search_pattern(document['Term'])
-        
+        return document
+
+
+    def find_topic_colors(self, document):
+
         lookup = pd.DataFrame({
             'Topic': self.topic_color.transform.factors, 
             'Color': self.topic_color.transform.palette
@@ -103,6 +105,20 @@ class actions(default):
         lookup = lookup.merge(document[['Topic','Term']], on='Topic')
         lookup = lookup.drop(columns='Topic').set_index('Term')
         lookup = lookup['Color'].to_dict()
+
+        return lookup
+
+
+    def highlight_topics(self, text, document_idx):
+
+        document = self.find_topic_terms(document_idx)
+
+        if len(document)==0:
+            return text
+
+        pattern = self.search_pattern(document['Term'])
+        
+        lookup = self.find_topic_colors(document)
 
         color = lambda m: f'<span style="background-color:{lookup[m.group().lower()]}">{m.group()}</span>'
         text = re.sub(pattern, color, text, flags=re.IGNORECASE)
@@ -126,6 +142,13 @@ class actions(default):
         return text
 
 
+    def set_topic_confidence(self, distribution, title_text):
+
+        self.figure['topic_confidence'].title.text = title_text
+        
+        self.source['topic_confidence'].data = distribution.to_dict(orient='list')
+
+
     def get_topic_prediction(self, event):
 
         self.default_selections(event='get_topic_prediction', ignore=None)
@@ -136,7 +159,7 @@ class actions(default):
 
         distribution = self.assign_topic(self.topic['model'], features)
 
-        self.predict['renderer'].data_source.data = distribution.to_dict(orient='list')
+        self.set_topic_confidence(distribution, 'Topic Prediction')
 
         predicted_topic = distribution.loc[distribution['Confidence']>0, 'Topic']
         
@@ -181,8 +204,6 @@ class actions(default):
 
 
     def set_topics_distribution(self, title_text, topic_terms):
-
-        self.tabs_topics.active = 2
 
         self.figure['topic_distribution'].title.text = title_text
 
