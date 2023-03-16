@@ -142,10 +142,9 @@ class actions(default):
         return text
 
 
-    def set_topic_confidence(self, distribution, title_text):
+    def set_topic_confidence(self, distribution):
 
-        self.figure['topic_confidence'].title.text = title_text
-        
+        self.figure['topic_confidence'].y_range.factors = distribution.loc[distribution['Confidence']>0, 'Topic'].values
         self.source['topic_confidence'].data = distribution.to_dict(orient='list')
 
 
@@ -159,7 +158,7 @@ class actions(default):
 
         distribution = self.assign_topic(self.topic['model'], features)
 
-        self.set_topic_confidence(distribution, 'Topic Prediction')
+        self.set_topic_confidence(distribution)
 
         predicted_topic = distribution.loc[distribution['Confidence']>0, 'Topic']
         

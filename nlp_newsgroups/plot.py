@@ -211,9 +211,8 @@ class plot(data, model, selections):
 
         self.source['topic_confidence'] = ColumnDataSource({'Topic':[], 'Confidence':[]})
 
-        # TODO: rename title
         self.figure['topic_confidence'] = figure(
-            y_range=self.topic_color.transform.factors, width=300, height=250, title='Topic Prediction',
+            y_range=self.topic_color.transform.factors, width=300, height=125, title='Topic Name Color',
             x_axis_label='Confidence', toolbar_location=None
         )
 

@@ -89,16 +89,14 @@ class dashboard(plot):
                 column(
                     self.title['topics'],
                     tabs_topics,
-                    row(
-                        self.figure['topic_confidence'],
-                        column(self.input['topic_distribution_range'], self.figure['topic_distribution'])
-                    )
+                    column(self.input['topic_distribution_range'], self.figure['topic_distribution'])
                 )
             ),
             column(
                 row(
                     column(self.title['sample'], self.sample_number),
-                    self.sample_legend
+                    self.sample_legend,
+                    self.figure['topic_confidence']
                 ),
                 self.sample_document
             )
