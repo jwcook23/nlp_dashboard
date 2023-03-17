@@ -13,7 +13,7 @@ class default():
 
         self.default_ngram()
         self.default_topics_terms()
-        self.default_topics_distribution()
+        self.default_topic_term_importance()
         self.default_topic_assignment()
         self.default_samples()
 
@@ -30,7 +30,7 @@ class default():
         for source in reset:
             self.source[source].selected.indices = []
 
-        self.default_topics_distribution()
+        self.default_topic_term_importance()
         if ignore is not None and not (ignore=='entity').any():
             self.default_entity()
 
@@ -139,9 +139,16 @@ class default():
         self.topic_color = factor_cmap("Topic", palette=Category10[10], factors=factors)
 
 
-    def default_topics_distribution(self):
+    def default_topic_term_importance(self):
 
         self.figure['topic_distribution'].title.text = 'Select in Topic Summary or Predict Topic to Display'
         self.figure['topic_distribution'].x_range.factors = []
         if self.figure['topic_distribution'].renderers:
             self.figure['topic_distribution'].renderers = []
+
+
+    def default_topic_confidence(self):
+
+        source = self.topic['rollup'].rename(columns={'Weight': 'Confidence'})
+        source = source.reset_index().to_dict(orient='list')
+        self.source['topic_confidence'].data = source

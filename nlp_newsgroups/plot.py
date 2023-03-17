@@ -40,7 +40,7 @@ class plot(data, model, selections):
         self.plot_ybar('entity_label', fig_height=150)
         self.plot_topics_terms()
         self.plot_topics_confidence()
-        self.plot_topics_distribution()
+        self.plot_topic_term_importance()
         self.plot_assignment()
         self.predict_topics()
         self.plot_samples()
@@ -107,6 +107,7 @@ class plot(data, model, selections):
             blocks_df = pd.DataFrame.from_dict(blocks).set_index(sub_df.index)
             return sub_df.join(blocks_df, how='left').reset_index()
 
+        # TODO: can self.topic['rollup'] be used?
         topics_combined = self.topic['summary'][self.topic['summary']['Rank']<top_num].copy()
         topics_combined = topics_combined.sort_values(by='Weight')
 
@@ -212,7 +213,7 @@ class plot(data, model, selections):
         self.source['topic_confidence'] = ColumnDataSource({'Topic':[], 'Confidence':[]})
 
         self.figure['topic_confidence'] = figure(
-            y_range=self.topic_color.transform.factors, width=300, height=125, title='Topic Name Color',
+            y_range=self.topic_color.transform.factors, width=300, height=200, title='Topic Name Color',
             x_axis_label='Confidence', toolbar_location=None
         )
 
@@ -220,16 +221,18 @@ class plot(data, model, selections):
             y='Topic', right='Confidence', source=self.source['topic_confidence'], fill_color=self.topic_color
         )
 
+        self.default_topic_confidence()
 
-    def plot_topics_distribution(self):
+
+    def plot_topic_term_importance(self):
 
         self.figure['topic_distribution'] = figure(
             width=650, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Importance', title=''
         )
         self.figure['topic_distribution'].xaxis.major_label_orientation = pi/8
         self.input['topic_distribution_range'] = RangeSlider(start=1, end=2, value=(1,2), step=1, title='Term Range Displayed', width=125)
-        self.input['topic_distribution_range'].on_change('value', self.set_topics_distribution_range)
-        self.default_topics_distribution()
+        self.input['topic_distribution_range'].on_change('value', self.set_topic_term_importance_range)
+        self.default_topic_term_importance()
 
 
     def plot_assignment(self):

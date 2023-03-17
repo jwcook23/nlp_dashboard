@@ -106,15 +106,15 @@ class model():
 
     def assign_topic(self, topic_model, features):
 
-        distribution = topic_model.transform(features)
-        distribution = pd.DataFrame.from_records(distribution, columns=self.topic['name'])
-        distribution.index.name = 'Document'
-        distribution = distribution.melt(var_name='Topic', value_name='Confidence', ignore_index=False)
-        distribution = distribution.sort_values(by=['Topic', 'Confidence'], ascending=[True, False])
-        rank = distribution.groupby('Document')['Confidence'].rank(ascending=False).astype('int64')
-        distribution['Rank'] = rank
+        topic_confidence = topic_model.transform(features)
+        topic_confidence = pd.DataFrame.from_records(topic_confidence, columns=self.topic['name'])
+        topic_confidence.index.name = 'Document'
+        topic_confidence = topic_confidence.melt(var_name='Topic', value_name='Confidence', ignore_index=False)
+        topic_confidence = topic_confidence.sort_values(by=['Topic', 'Confidence'], ascending=[True, False])
+        rank = topic_confidence.groupby('Document')['Confidence'].rank(ascending=False).astype('int64')
+        topic_confidence['Rank'] = rank
 
-        return distribution
+        return topic_confidence
 
 
     @performance.timing
@@ -164,7 +164,10 @@ class model():
             self.topic['name'] += [name]
             self.topic['summary'] = pd.concat([self.topic['summary'], summary])
 
-        self.topic['Distribution'] = self.assign_topic(self.topic['model'], self.topic['features'])
+        self.topic['confidence'] = self.assign_topic(self.topic['model'], self.topic['features'])
+
+        self.topic['rollup'] = self.topic['summary'].groupby('Topic')
+        self.topic['rollup'] = self.topic['rollup'].agg({'Weight': sum}).sort_values(by='Weight', ascending=False)
 
 
     @performance.timing

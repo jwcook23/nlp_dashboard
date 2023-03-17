@@ -25,7 +25,15 @@ def test_selected_ngram(db):
 @pytest.mark.parametrize('db', [('selected_topic')], indirect=True)
 def test_selected_topic(db):
 
-    # db.selected_topic(None, None, new=[0])
+    row_source = db.source['topic_number'].data['Topic'][
+        db.source['topic_number'].data['Topic']=='Unnamed # 7'
+    ].index
+    db.selected_topic(None, None, row_source)
+
+
+@pytest.mark.parametrize('db', [('selected_sample')], indirect=True)
+def test_selected_sample(db):
+
     row_source = db.source['topic_number'].data['Topic'][
         db.source['topic_number'].data['Topic']=='Unnamed # 7'
     ].index

@@ -90,8 +90,8 @@ class dashboard(plot):
                     self.title['topics'],
                     tabs_topics,
                     row(
-                        column(self.figure['topic_confidence'], row(self.sample_number, self.input['topic_distribution_range'])),
-                        self.figure['topic_distribution']
+                        column(self.figure['topic_confidence'], self.sample_number),
+                        column(self.figure['topic_distribution'], self.input['topic_distribution_range'])
                     )
                 )
             ),

@@ -27,7 +27,7 @@ class actions(default):
         self.status_message.text = message
 
 
-    def set_samples(self, sample_title, text, selected_terms, labeled_entity, topic_confidence, topic_terms):
+    def set_samples(self, sample_title, text, selected_terms, labeled_entity):
 
         self.title['sample'].text = f'Example Documents:<br>{sample_title}'
         self.sample_legend.text = f'''
@@ -42,9 +42,6 @@ class actions(default):
         self.sample_text = text
         self.sample_selected_terms = selected_terms
         self.sample_entity_labels = labeled_entity
-
-        # TODO: if topic confidence and topic_terms are provided, remove the ability to scroll
-        self.selected_sample(None, None, self.sample_number.value, topic_confidence, topic_terms)
 
 
     def search_pattern(self, terms):
@@ -71,10 +68,10 @@ class actions(default):
         return text
             
 
-    def find_topic_terms(self, document_idx, topic_confidence):
+    def find_topic_terms(self, document_idx):
 
-        topic_confidence = self.topic['Distribution'].loc[
-            (self.topic['Distribution'].index==document_idx) & (self.topic['Distribution']['Confidence']>0),
+        topic_confidence = self.topic['confidence'].loc[
+            (self.topic['confidence'].index==document_idx) & (self.topic['confidence']['Confidence']>0),
             ['Topic','Confidence']
         ]
         
@@ -170,12 +167,13 @@ class actions(default):
 
         title = topic_terms['Topic'].drop_duplicates()
         title = f"Predicted Topics = {', '.join(title)}"
-        self.set_topics_distribution(title, topic_terms)
+        self.set_topic_term_importance(title, topic_terms)
         
         self.set_samples(
-            'Topic Prediction', text, selected_terms=None, labeled_entity=None,
-            topic_confidence=topic_confidence, topic_terms=topic_terms
+            'Topic Prediction', text, selected_terms=None, labeled_entity=None
         )
+
+        self.selected_sample(None, None, self.sample_number.value, topic_confidence, topic_terms)
 
 
     def rename_topic(self, event):
@@ -187,13 +185,13 @@ class actions(default):
         self.predict['figure'].y_range.factors = self.topic['name']
         
         self.topic['summary']['Topic'] = self.topic['summary']['Topic'].replace(self.topic_number, new_name)
-        self.topic['Distribution']['Topic'] = self.topic['Distribution']['Topic'].replace(self.topic_number, new_name)
+        self.topic['confidence']['Topic'] = self.topic['confidence']['Topic'].replace(self.topic_number, new_name)
         self.glyph['topic_term'].glyph.fill_color = self.topic_color
 
         self.default_figures(None)
 
     
-    def set_topics_distribution_range(self, attr, old, new):
+    def set_topic_term_importance_range(self, attr, old, new):
 
         start = floor(new[0])-1
         end = ceil(new[1])
@@ -202,7 +200,7 @@ class actions(default):
         self.figure['topic_distribution'].xaxis[0].axis_label = f'Terms {start+1}-{end}'
 
 
-    def set_topics_distribution(self, title_text, topic_terms):
+    def set_topic_term_importance(self, title_text, topic_terms):
 
         self.figure['topic_distribution'].title.text = title_text
 
@@ -234,7 +232,7 @@ class actions(default):
 
         self.input['topic_distribution_range'].end = len(self.topic_distribution_factors)
         self.input['topic_distribution_range'].value = (1, min(self.input['topic_distribution_range'].end, 25))
-        self.set_topics_distribution_range(None, None, self.input['topic_distribution_range'].value)
+        self.set_topic_term_importance_range(None, None, self.input['topic_distribution_range'].value)
 
 
     def set_yaxis_range(self, attr, old, new, fig_name, num_factors):

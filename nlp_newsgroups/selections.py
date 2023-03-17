@@ -110,22 +110,24 @@ class selections(actions):
 
         self.topic_number = self.source['topic_number'].data['Topic'].iloc[new].values[0]
 
-        topics = self.topic['Distribution'][
-            (self.topic['Distribution']['Topic']==self.topic_number) & (self.topic['Distribution']['Rank']==1)
+        topic_documents = self.topic['confidence'][
+            (self.topic['confidence']['Topic']==self.topic_number) & (self.topic['confidence']['Rank']==1)
         ]
 
-        document_idx = topics.index
+        document_idx = topic_documents.index
         topic_terms = self.topic['summary'].loc[
-            (self.topic['summary']['Topic'].isin(topics['Topic'])) & (self.topic['summary']['Weight']>0)
+            (self.topic['summary']['Topic'].isin(topic_documents['Topic'])) & (self.topic['summary']['Weight']>0)
         ]
 
         text = self.data_input[document_idx]
 
         title = f'Selected Topic = {self.topic_number}'
 
-        self.set_topics_distribution(title, topic_terms)
+
+        self.set_topic_term_importance(title, topic_terms)
+
         labeled_entity = self.entity['terms'].loc[
             self.entity['terms']['document_idx'].isin(document_idx)
         ]
 
-        self.set_samples(title, text, None, topic_terms['Term'], labeled_entity)
+        self.set_samples(title, text, None, labeled_entity)
