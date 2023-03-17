@@ -145,4 +145,3 @@ class default():
         self.figure['topic_distribution'].x_range.factors = []
         if self.figure['topic_distribution'].renderers:
             self.figure['topic_distribution'].renderers = []
-            self.figure['topic_distribution'].right = []

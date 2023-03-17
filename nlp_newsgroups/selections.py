@@ -9,12 +9,15 @@ class selections(actions):
         actions.__init__(actions)
 
 
-    def selected_sample(self, attr, old, new):
+    def selected_sample(self, attr, old, new, topic_confidence, topic_terms):
 
         if self.sample_text is not None:
 
             text = self.sample_text.iloc[new]
-            document_idx = self.sample_text.index[self.sample_number.value]
+            if topic_confidence is None:
+                document_idx = self.sample_text.index[self.sample_number.value]
+            else:
+                document_idx = None
 
             if self.sample_entity_labels is not None:
                 text = self.highlight_entities(text, document_idx)
@@ -24,7 +27,7 @@ class selections(actions):
             if self.sample_selected_terms is not None:
                 text = self.surround_html_tag(text, self.sample_selected_terms, 'selected_terms')
 
-            text = self.highlight_topics(text, document_idx)
+            text = self.highlight_topics(text, document_idx, topic_confidence, topic_terms)
        
             self.sample_document.text = text
 

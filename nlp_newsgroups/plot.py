@@ -136,7 +136,7 @@ class plot(data, model, selections):
         )
 
         self.sample_number = Spinner(low=0, high=1, value=0, step=1, width=100)
-        self.sample_number.on_change('value', self.selected_sample)
+        self.sample_number.on_change('value', partial(self.selected_sample,topic_confidence=None,topic_terms=None))
 
         self.default_samples()
 
@@ -159,7 +159,7 @@ class plot(data, model, selections):
         self.input['axis_range'][fig_name].on_change('value', partial(self.set_yaxis_range, fig_name=fig_name, num_factors=num_factors))
 
         cmap = linear_cmap(
-            field_name='Document Count', palette='Turbo256', 
+            field_name='Document Count', palette='Cividis256', 
             low=min(self.source[fig_name].data['Document Count']), high=max(self.source[fig_name].data['Document Count'])
         )
         color_bar = ColorBar(color_mapper=cmap['transform'], title='Document Count')
@@ -224,7 +224,7 @@ class plot(data, model, selections):
     def plot_topics_distribution(self):
 
         self.figure['topic_distribution'] = figure(
-            width=950, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Importance', title=''
+            width=650, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Importance', title=''
         )
         self.figure['topic_distribution'].xaxis.major_label_orientation = pi/8
         self.input['topic_distribution_range'] = RangeSlider(start=1, end=2, value=(1,2), step=1, title='Term Range Displayed', width=125)

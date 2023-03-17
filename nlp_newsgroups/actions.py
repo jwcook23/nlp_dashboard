@@ -27,7 +27,7 @@ class actions(default):
         self.status_message.text = message
 
 
-    def set_samples(self, sample_title, text, selected_terms, topic_terms, labeled_entity):
+    def set_samples(self, sample_title, text, selected_terms, labeled_entity, topic_confidence, topic_terms):
 
         self.title['sample'].text = f'Example Documents:<br>{sample_title}'
         self.sample_legend.text = f'''
@@ -41,10 +41,10 @@ class actions(default):
         self.sample_number.high = len(text)-1
         self.sample_text = text
         self.sample_selected_terms = selected_terms
-        self.sample_topic_terms = topic_terms
         self.sample_entity_labels = labeled_entity
 
-        self.selected_sample(None, None, self.sample_number.value)
+        # TODO: if topic confidence and topic_terms are provided, remove the ability to scroll
+        self.selected_sample(None, None, self.sample_number.value, topic_confidence, topic_terms)
 
 
     def search_pattern(self, terms):
@@ -71,29 +71,25 @@ class actions(default):
         return text
             
 
-    def find_topic_terms(self, document_idx):
+    def find_topic_terms(self, document_idx, topic_confidence):
 
-        document = self.topic['Distribution'].loc[
+        topic_confidence = self.topic['Distribution'].loc[
             (self.topic['Distribution'].index==document_idx) & (self.topic['Distribution']['Confidence']>0),
             ['Topic','Confidence']
         ]
-
         
-        # if len(document)>1:
-        #     raise NotImplementedError('unable to color multiple topics for a document')
+        topic_terms = topic_confidence.merge(self.topic['summary'][['Topic','Term','Weight']], on='Topic')
+        topic_terms = topic_terms[topic_terms['Weight']>0]
 
-        document = document.merge(self.topic['summary'][['Topic','Term','Weight']], on='Topic')
-        document = document[document['Weight']>0]
-
-        document = document[
-            document['Term'].isin(
+        topic_terms = topic_terms[
+            topic_terms['Term'].isin(
                     self.topic['terms'][
                         self.topic['features'][document_idx,:].nonzero()[1]
                     ]
             )
         ]
 
-        return document
+        return topic_confidence, topic_terms
 
 
     def find_topic_colors(self, document):
@@ -109,16 +105,19 @@ class actions(default):
         return lookup
 
 
-    def highlight_topics(self, text, document_idx):
+    def highlight_topics(self, text, document_idx, topic_confidence, topic_terms):
 
-        document = self.find_topic_terms(document_idx)
+        if document_idx is not None:
+            topic_confidence, topic_terms = self.find_topic_terms(document_idx)
 
-        if len(document)==0:
+        self.set_topic_confidence(topic_confidence)
+
+        if len(topic_terms)==0:
             return text
 
-        pattern = self.search_pattern(document['Term'])
+        pattern = self.search_pattern(topic_terms['Term'])
         
-        lookup = self.find_topic_colors(document)
+        lookup = self.find_topic_colors(topic_terms)
 
         color = lambda m: f'<span style="background-color:{lookup[m.group().lower()]}">{m.group()}</span>'
         text = re.sub(pattern, color, text, flags=re.IGNORECASE)
@@ -156,11 +155,9 @@ class actions(default):
 
         features = self.topic['vectorizer'].transform(text)
 
-        distribution = self.assign_topic(self.topic['model'], features)
+        topic_confidence = self.assign_topic(self.topic['model'], features)
 
-        self.set_topic_confidence(distribution)
-
-        predicted_topic = distribution.loc[distribution['Confidence']>0, 'Topic']
+        predicted_topic = topic_confidence.loc[topic_confidence['Confidence']>0, 'Topic']
         
         idx = features.nonzero()[1]
         topic_terms = pd.DataFrame({
@@ -175,7 +172,10 @@ class actions(default):
         title = f"Predicted Topics = {', '.join(title)}"
         self.set_topics_distribution(title, topic_terms)
         
-        self.set_samples('Topic Prediction', text, None, topic_terms['Term'], None)
+        self.set_samples(
+            'Topic Prediction', text, selected_terms=None, labeled_entity=None,
+            topic_confidence=topic_confidence, topic_terms=topic_terms
+        )
 
 
     def rename_topic(self, event):
@@ -213,7 +213,6 @@ class actions(default):
             self.figure['topic_distribution'].right = []
 
         topics = topic_terms['Topic'].drop_duplicates()
-        legend = []
         for topic_number in topics.values:
             
             source = topic_terms.loc[
@@ -226,16 +225,12 @@ class actions(default):
             ].index[0]
             topic_color = self.topic_color.transform.palette[idx]
             
-            render_line = self.figure['topic_distribution'].line(
+            self.figure['topic_distribution'].line(
                 x='Term', y='Weight', source=source, line_width=4, line_color=topic_color
             )
-            render_point = self.figure['topic_distribution'].square(
+            self.figure['topic_distribution'].square(
                 x='Term', y='Weight', source=source, size=10, fill_color=topic_color, line_color=None
             )
-            legend += [(topic_number, [render_line, render_point])]
-
-        legend = Legend(items=legend, title='Topic')
-        self.figure['topic_distribution'].add_layout(legend, 'right')
 
         self.input['topic_distribution_range'].end = len(self.topic_distribution_factors)
         self.input['topic_distribution_range'].value = (1, min(self.input['topic_distribution_range'].end, 25))
