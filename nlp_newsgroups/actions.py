@@ -43,6 +43,9 @@ class actions(default):
         self.sample_selected_terms = selected_terms
         self.sample_entity_labels = labeled_entity
 
+        if self.sample_toggle.labels[self.sample_toggle.active] == "Document Samples":
+            self.selected_sample(None, None, [0], None, None)
+            
 
     def search_pattern(self, terms):
 

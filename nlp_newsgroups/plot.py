@@ -5,7 +5,8 @@ from functools import partial
 from bokeh.plotting import figure
 from bokeh.models import (
     Div, ColumnDataSource, Spinner, ColorBar, Button, TextInput, CustomJS,
-    Slider, RangeSlider, NumericInput, Select, TextAreaInput, TapTool, HoverTool
+    Slider, RangeSlider, NumericInput, Select, TextAreaInput, TapTool, HoverTool,
+    RadioButtonGroup
 )
 from bokeh.transform import linear_cmap
 import pandas as pd
@@ -94,7 +95,7 @@ class plot(data, model, selections):
             'entity': Div(text='Entity Name', styles={'font-weight': 'bold'}, width=75),
             'entity_label': Div(text='Entity Label', styles={'font-weight': 'bold'}, width=75),
             'topics': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
-            'sample': Div(text='', styles={'font-weight': 'bold', 'font-size': '125%'}, width=250)
+            'sample': Div(text='', styles={'font-weight': 'bold', 'font-size': '125%'}, width=250, visible=False)
         }
 
 
@@ -130,13 +131,16 @@ class plot(data, model, selections):
 
     def plot_samples(self):
 
-        self.sample_legend = Div(text='')
+        self.sample_legend = Div(text='', visible=False)
 
         self.sample_document = Div(
             text='', width=1400, height=100
         )
 
-        self.sample_number = Spinner(low=0, high=1, value=0, step=1, width=100)
+        self.sample_toggle = RadioButtonGroup(labels=["All Documents", "Document Samples"], active=0)
+        self.sample_toggle.on_event('button_click', self.activate_samples)
+        
+        self.sample_number = Spinner(low=0, high=1, value=0, step=1, width=100, visible=False)
         self.sample_number.on_change('value', partial(self.selected_sample,topic_confidence=None,topic_terms=None))
 
         self.default_samples()

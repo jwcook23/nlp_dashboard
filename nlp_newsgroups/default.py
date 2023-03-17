@@ -45,6 +45,8 @@ class default():
         self.sample_number.high = 1
         self.sample_text = None
 
+        self.sample_document.text = ''
+
 
     def default_ngram(self):
 

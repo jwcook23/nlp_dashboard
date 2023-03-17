@@ -38,6 +38,8 @@ def test_selected_sample(db):
         db.source['topic_number'].data['Topic']=='Unnamed # 7'
     ].index
     db.selected_topic(None, None, row_source)
+    db.sample_toggle.active = db.sample_toggle.labels.index('Document Samples')
+    db.activate_samples(None)
     db.sample_number.value = 6
 
 

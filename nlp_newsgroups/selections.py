@@ -8,6 +8,22 @@ class selections(actions):
         
         actions.__init__(actions)
 
+    def activate_samples(self, event):
+
+        option = self.sample_toggle.labels[self.sample_toggle.active]
+
+        if option == 'All Documents':
+            self.title['sample'].visible = False
+            self.sample_number.visible = False
+            self.sample_legend.visible = False
+            self.default_samples()
+        elif option == 'Document Samples':
+            self.title['sample'].visible = True
+            self.sample_number.visible = True
+            self.sample_legend.visible = True
+            self.selected_sample(None, None, 0, None, None)
+
+
 
     def selected_sample(self, attr, old, new, topic_confidence, topic_terms):
 
