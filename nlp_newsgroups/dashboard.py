@@ -47,18 +47,33 @@ class dashboard(plot):
         }
         space = Div(width=10)
 
-        tabs_topics = Tabs(tabs=[
-            TabPanel(child=column(
-                row(self.set_topic_name, self.input['topic_name'], self.input['topic_description']),
-                self.figure['topics']
-            ), title='Topic Summary'),
+        tab_options = Tabs(tabs=[
+            TabPanel(
+                child=column(
+                    self.title['topics'],
+                    row(self.set_topic_name, self.input['topic_name'], self.input['topic_description']),
+                    self.figure['topics']
+                ), title='Topic Summary'
+            ),
             TabPanel(
                 child=row(
                     self.predict['calculate'],
                     self.predict['input']
-                ),
-                title='Topic Prediction'
-            )
+                ), title='Topic Prediction'
+            ),
+            TabPanel(
+                child=column(
+                    row(self.title['entity_label'], self.input['axis_range']['entity_label']),
+                    self.figure['entity_label'],
+                    row(self.title['entity'], self.input['axis_range']['entity']), 
+                    self.figure['entity']
+                ), title='Named Entities'
+            ),
+            TabPanel(
+                child=column(
+                    row(self.title['ngram'], self.input['axis_range']['ngram']), 
+                    self.figure['ngram']
+                ), title='Term Counts')
         ])
 
 
@@ -70,29 +85,11 @@ class dashboard(plot):
                     TabPanel(child=row(*topic_hyperparameters.values()), title='Topic Hyperparameters')
                 ])
             ),
-            row(
-                column(
-                    self.title['terms_entity'],
-                    Tabs(tabs=[
-                        TabPanel(child=column(
-                            row(self.title['entity_label'], self.input['axis_range']['entity_label']),
-                            self.figure['entity_label'],
-                            row(self.title['entity'], self.input['axis_range']['entity']), 
-                            self.figure['entity']
-                        ), title='Entity'),
-                        TabPanel(child=column(
-                            row(self.title['ngram'], self.input['axis_range']['ngram']), 
-                            self.figure['ngram']
-                        ), title='Term')
-                    ])
-                ),
-                column(
-                    self.title['topics'],
-                    tabs_topics,
-                    row(
-                        column(self.figure['topic_confidence'], self.sample_toggle, self.sample_number),
-                        column(self.input['topic_distribution_range'], self.figure['topic_distribution'])
-                    )
+            column(
+                tab_options,
+                row(
+                    column(self.figure['topic_confidence'], self.sample_toggle, self.sample_number),
+                    column(self.input['topic_distribution_range'], self.figure['topic_distribution'])
                 )
             ),
             column(

@@ -24,7 +24,6 @@ class selections(actions):
             self.selected_sample(None, None, 0, None, None)
 
 
-
     def selected_sample(self, attr, old, new, topic_confidence, topic_terms):
 
         if self.sample_text is not None:

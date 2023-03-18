@@ -146,6 +146,7 @@ class plot(data, model, selections):
         self.default_samples()
 
 
+    # TODO: change to plot_bar function limit height of tabs
     def plot_ybar(self, fig_name: Literal = ['ngram','entity','entity_label'], fig_height=550):
 
         self.figure[fig_name] = figure(
