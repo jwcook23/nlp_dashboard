@@ -56,17 +56,21 @@ class dashboard(plot):
                 ), title='Topic Summary'
             ),
             TabPanel(
-                child=row(
+                child=column(
                     self.predict['calculate'],
                     self.predict['input']
                 ), title='Topic Prediction'
             ),
             TabPanel(
-                child=column(
-                    row(self.title['entity_label'], self.input['axis_range']['entity_label']),
-                    self.figure['entity_label'],
-                    row(self.title['entity'], self.input['axis_range']['entity']), 
-                    self.figure['entity']
+                child=row(
+                    column(
+                        row(self.title['entity_label'], self.input['axis_range']['entity_label']),
+                        self.figure['entity_label'],
+                    ),
+                    column(
+                        row(self.title['entity'], self.input['axis_range']['entity']), 
+                        self.figure['entity']
+                    )
                 ), title='Named Entities'
             ),
             TabPanel(

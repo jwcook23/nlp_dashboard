@@ -3,7 +3,7 @@ from math import floor, ceil
 
 import pandas as pd
 
-from bokeh.models import Legend
+from bokeh.models import FactorRange
 
 from nlp_newsgroups.default import default
 
@@ -238,11 +238,15 @@ class actions(default):
         self.set_topic_term_importance_range(None, None, self.input['topic_distribution_range'].value)
 
 
-    def set_yaxis_range(self, attr, old, new, fig_name, num_factors):
+    def set_axis_range(self, attr, old, new, fig_name, num_factors):
         
         start = floor(new)
         end = start+num_factors-1
         end = min(self.input['axis_range'][fig_name].end, end)
 
-        self.figure[fig_name].y_range.factors = self.factors[fig_name][start-1:end]
-        self.figure[fig_name].yaxis[0].axis_label = f'Terms {start}-{end}'
+        if isinstance(self.figure[fig_name].y_range, FactorRange):
+            self.figure[fig_name].y_range.factors = self.factors[fig_name][start-1:end]
+            self.figure[fig_name].yaxis[0].axis_label = f'Terms {start}-{end}'
+        else:
+            self.figure[fig_name].x_range.factors = self.factors[fig_name][start-1:end]
+            self.figure[fig_name].xaxis[0].axis_label = f'Terms {start}-{end}'

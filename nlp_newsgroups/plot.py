@@ -6,7 +6,7 @@ from bokeh.plotting import figure
 from bokeh.models import (
     Div, ColumnDataSource, Spinner, ColorBar, Button, TextInput, CustomJS,
     Slider, RangeSlider, NumericInput, Select, TextAreaInput, TapTool, HoverTool,
-    RadioButtonGroup
+    RadioButtonGroup, FactorRange
 )
 from bokeh.transform import linear_cmap
 import pandas as pd
@@ -36,9 +36,9 @@ class plot(data, model, selections):
 
         self.plot_titles()
         
-        self.plot_ybar('ngram')
-        self.plot_ybar('entity', fig_height=350)
-        self.plot_ybar('entity_label', fig_height=150)
+        self.plot_bar(factor_axis='x', fig_name='ngram', fig_width=1300, fig_height=300)
+        self.plot_bar(factor_axis='x', fig_name='entity', fig_width=950, fig_height=300)
+        self.plot_bar(factor_axis='y', fig_name='entity_label', fig_width=350, fig_height=300)
         self.plot_topics_terms()
         self.plot_topics_confidence()
         self.plot_topic_term_importance()
@@ -134,7 +134,7 @@ class plot(data, model, selections):
         self.sample_legend = Div(text='', visible=False)
 
         self.sample_document = Div(
-            text='', width=1400, height=100
+            text='', width=1250, height=100
         )
 
         self.sample_toggle = RadioButtonGroup(labels=["All Documents", "Document Samples"], active=0)
@@ -146,23 +146,33 @@ class plot(data, model, selections):
         self.default_samples()
 
 
-    # TODO: change to plot_bar function limit height of tabs
-    def plot_ybar(self, fig_name: Literal = ['ngram','entity','entity_label'], fig_height=550):
+    def plot_bar(self, factor_axis, fig_name, fig_width, fig_height):
 
-        self.figure[fig_name] = figure(
-            height=fig_height, width=350, toolbar_location=None, tools="tap", 
-            tooltips="Term Count = @{Term Count}<br>Document Count = @{Document Count}",
-            x_axis_label='Term Count', y_range=[]
-        )
-        self.figure[fig_name].xaxis.major_label_orientation = pi/8
+        tooltips = "Term Count = @{Term Count}<br>Document Count = @{Document Count}"
+
+        if factor_axis=='y':
+            self.figure[fig_name] = figure(
+                height=fig_height, width=fig_width, toolbar_location=None, tools="tap", tooltips=tooltips,
+                x_axis_label='Term Count', y_range = []
+            )
+            self.figure[fig_name].xaxis.major_label_orientation = pi/8
+        else:
+            self.figure[fig_name] = figure(
+                height=fig_height, width=fig_width, toolbar_location=None, tools="tap", tooltips=tooltips,
+                y_axis_label='Term Count', x_range = []
+            )
+            self.figure[fig_name].xaxis.major_label_orientation = pi/8
 
         self.source[fig_name] = ColumnDataSource()
         self.input['axis_range'][fig_name] = Slider(start=1, end=2, value=1, step=1, title='First Term Displayed', width=125)
 
         self.default_terms(fig_name)
 
-        num_factors = len(self.figure[fig_name].y_range.factors)
-        self.input['axis_range'][fig_name].on_change('value', partial(self.set_yaxis_range, fig_name=fig_name, num_factors=num_factors))
+        if factor_axis=='y':
+            num_factors = len(self.figure[fig_name].y_range.factors)
+        else:
+            num_factors = len(self.figure[fig_name].x_range.factors)
+        self.input['axis_range'][fig_name].on_change('value', partial(self.set_axis_range, fig_name=fig_name, num_factors=num_factors))
 
         cmap = linear_cmap(
             field_name='Document Count', palette='Cividis256', 
@@ -170,11 +180,18 @@ class plot(data, model, selections):
         )
         color_bar = ColorBar(color_mapper=cmap['transform'], title='Document Count')
 
-        self.figure[fig_name].hbar(
-            y='Terms', right='Term Count',
-            source=self.source[fig_name], width=0.9, fill_color=cmap, line_color=None
-        )
-        self.figure[fig_name].add_layout(color_bar, 'right')   
+        if factor_axis=='y':
+            self.figure[fig_name].hbar(
+                y='Terms', right='Term Count', source=self.source[fig_name],
+                width=0.9, fill_color=cmap, line_color=None
+            )
+            self.figure[fig_name].add_layout(color_bar, 'right')
+        else:
+            self.figure[fig_name].vbar(
+                x='Terms', top='Term Count', source=self.source[fig_name],
+                width=0.9, fill_color=cmap, line_color=None
+            )
+            self.figure[fig_name].add_layout(color_bar, 'right')
 
         self.source[fig_name].selected.on_change('indices', partial(self.selected_source, fig_name=fig_name))
 
@@ -182,7 +199,7 @@ class plot(data, model, selections):
     def plot_topics_terms(self):
 
         self.figure['topics'] = figure(
-            width=950, height=300, toolbar_location=None,
+            width=1250, height=300, toolbar_location=None,
             x_axis_location=None, y_axis_location=None, title='Topic Term Importance (top 10 terms)'
         )
         self.figure['topics'].x_range.range_padding = self.figure['topics'].y_range.range_padding = 0
@@ -257,5 +274,5 @@ class plot(data, model, selections):
 
         self.predict['input'] = TextAreaInput(
             value="Baseball season is over. so I'll have more time put my new hard drive in.",
-            width=300, height=250, title='Predict topic for input text.'
+            width=1250, height=250, title='Predict topic for input text.'
         )

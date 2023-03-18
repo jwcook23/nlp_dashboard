@@ -61,7 +61,7 @@ class default():
         self.factors['ngram'] = ngram['terms'].tolist()
 
         self.input['axis_range']['ngram'].end = len(self.factors['ngram'])
-        self.set_yaxis_range(None, None, self.input['axis_range']['ngram'].value, 'ngram', 25)
+        self.set_axis_range(None, None, self.input['axis_range']['ngram'].value, 'ngram', 50)
 
 
     def set_entity(self, entity):
@@ -82,7 +82,7 @@ class default():
         self.factors['entity'] = entity['entity_clean'].tolist()
 
         self.input['axis_range']['entity'].end = len(self.factors['entity'])
-        self.set_yaxis_range(None, None, self.input['axis_range']['entity'].value, 'entity', 20)  
+        self.set_axis_range(None, None, self.input['axis_range']['entity'].value, 'entity', 30)  
 
 
     def default_entity(self):
@@ -111,7 +111,7 @@ class default():
         self.factors['entity_label'] = entity['entity_label'].tolist()
 
         self.input['axis_range']['entity_label'].end = len(self.factors['entity_label'])
-        self.set_yaxis_range(None, None, self.input['axis_range']['entity_label'].value, 'entity_label', 5)
+        self.set_axis_range(None, None, self.input['axis_range']['entity_label'].value, 'entity_label', 10)
 
 
     def default_terms(self, fig_name):
