@@ -77,19 +77,23 @@ class dashboard(plot):
                 child=column(
                     row(self.title['ngram'], self.input['axis_range']['ngram']), 
                     self.figure['ngram']
-                ), title='Term Counts')
+                ), title='Term Counts'
+            ),
+            TabPanel(
+                child=row(
+                    row(column(self.input['recalculate'], self.input['save']), space),
+                    Tabs(tabs=[
+                        TabPanel(child=row(*general_hyperparameters.values()), title='Topic & Term Count Hyperparameters'),
+                        TabPanel(child=row(*topic_hyperparameters.values()), title='Topic Only Hyperparameters')
+                    ])
+                ), title='Model Training'
+            )
         ])
 
 
         self.layout = column(
-            row(
-                row(self.title['main'], column(self.input['recalculate'], self.input['save'], self.input['reset']), space),
-                Tabs(tabs=[
-                    TabPanel(child=row(*general_hyperparameters.values()), title='General Hyperparameters'),
-                    TabPanel(child=row(*topic_hyperparameters.values()), title='Topic Hyperparameters')
-                ])
-            ),
             column(
+                row(self.title['main'], self.input['reset']),
                 tab_options,
                 row(
                     column(self.figure['topic_confidence'], self.sample_toggle, self.sample_number),

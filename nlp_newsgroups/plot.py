@@ -71,7 +71,7 @@ class plot(data, model, selections):
                 title='Token Pattern',
                 width=250
             ),
-            'stop_words': TextInput(value="", title="Add Stopwords (comma seperated)", width=125),
+            'stop_words': TextInput(value="", title="Add Comma Seperated Stopword(s)", width=250),
             'max_df': Slider(start=0.75, end=1.0, value=0.95, step=0.05, title='Max Doc. Freq.', width=125),
             'min_df': Slider(start=1, end=len(self.data_all), value=2, step=1, title='Min Doc. #', width=125),
             'num_features': NumericInput(value=1000, low=1000, high=10000, title='# Features', width=75),
@@ -89,7 +89,7 @@ class plot(data, model, selections):
     def plot_titles(self):
 
         self.title = {
-            'main': Div(text=f'NLP Dashboard<br>{len(self.data_input):,} Documents', styles={'font-size': '150%', 'font-weight': 'bold'}, width=175),
+            'main': Div(text=f'NLP Dashboard: {len(self.data_input):,} Documents', styles={'font-size': '150%', 'font-weight': 'bold'}, width=350),
             'terms_entity': Div(text='Entity or Term Summary', styles={'font-size': '125%', 'font-weight': 'bold'}, width=150),
             'ngram': Div(text='Term', styles={'font-weight': 'bold'}, width=75),
             'entity': Div(text='Entity Name', styles={'font-weight': 'bold'}, width=75),
@@ -249,7 +249,7 @@ class plot(data, model, selections):
     def plot_topic_term_importance(self):
 
         self.figure['topic_distribution'] = figure(
-            width=650, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Importance', title=''
+            width=950, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Importance', title=''
         )
         self.figure['topic_distribution'].xaxis.major_label_orientation = pi/8
         self.input['topic_distribution_range'] = RangeSlider(start=1, end=2, value=(1,2), step=1, title='Term Range Displayed', width=125)
