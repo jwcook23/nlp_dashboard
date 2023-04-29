@@ -16,6 +16,7 @@ class default():
         self.default_topic_term_importance()
         self.default_topic_assignment()
         self.default_samples()
+        self.default_topic_confidence()
 
 
     def default_selections(self, event, ignore):

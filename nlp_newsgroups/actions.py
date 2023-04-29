@@ -185,9 +185,12 @@ class actions(default):
         idx = self.topic['name'].index(self.topic_number)
         new_name = self.input['topic_name'].value
         self.topic['name'][idx] = new_name
-        self.predict['figure'].y_range.factors = self.topic['name']
+        self.figure['topic_confidence'].y_range.factors = self.topic['name']
         
         self.topic['summary']['Topic'] = self.topic['summary']['Topic'].replace(self.topic_number, new_name)
+        self.topic['rollup'] = self.topic['rollup'].reset_index()
+        self.topic['rollup']['Topic'] = self.topic['rollup']['Topic'].replace(self.topic_number, new_name)
+        self.topic['rollup'] = self.topic['rollup'].set_index('Topic')
         self.topic['confidence']['Topic'] = self.topic['confidence']['Topic'].replace(self.topic_number, new_name)
         self.glyph['topic_term'].glyph.fill_color = self.topic_color
 
