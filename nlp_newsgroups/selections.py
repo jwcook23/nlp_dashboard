@@ -49,11 +49,11 @@ class selections(actions):
 
     def selected_source(self, attr, old, row_source, fig_name):
 
-        if fig_name=='ngram':
+        if fig_name=='Term Counts':
             self.selected_ngram(row_source)
         elif fig_name=='Entity Label':
             self.selected_entity_label(row_source)
-        elif fig_name=='entity':
+        elif fig_name=='Entity Name':
             self.selected_entity(row_source)
 
 
@@ -62,9 +62,9 @@ class selections(actions):
         if len(row_source)==0:
             return
         
-        self.default_selections(event='selected_ngram', ignore=pd.Series(['ngram']))
+        self.default_selections(event='selected_ngram', ignore=pd.Series(['Term Counts']))
 
-        sample_title = self.title['ngram'].text
+        sample_title = self.title['Term Counts'].text
         selected_terms = self.ngram['summary'].iloc[row_source]['terms']
 
         document_idx = self.ngram['features'][:, selected_terms.index].nonzero()[0]
@@ -97,7 +97,7 @@ class selections(actions):
         if len(row_source)==0:
             return
         
-        selected_terms = self.source['entity'].data['Terms'].iloc[row_source]
+        selected_terms = self.source['Entity Name'].data['Terms'].iloc[row_source]
         document_idx = self.entity['terms'].loc[
             self.entity['terms']['Entity Clean Text'].isin(selected_terms), 'Document Index'
         ].drop_duplicates()
@@ -105,9 +105,9 @@ class selections(actions):
             self.entity['terms']['Document Index'].isin(document_idx)
         ]
 
-        self.default_selections(event='selected_entity', ignore=pd.Series(['entity','Entity Label']))
+        self.default_selections(event='selected_entity', ignore=pd.Series(['Entity Name','Entity Label']))
 
-        sample_title = self.title['entity'].text
+        sample_title = self.title['Entity Name'].text
 
         text = self.data_input[document_idx]
 

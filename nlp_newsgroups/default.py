@@ -32,7 +32,7 @@ class default():
             self.source[source].selected.indices = []
 
         self.default_topic_term_weight()
-        if ignore is not None and not (ignore=='entity').any():
+        if ignore is not None and not (ignore=='Entity Name').any():
             self.default_entity()
 
 
@@ -53,16 +53,16 @@ class default():
 
         ngram = self.ngram['summary']
 
-        self.source['ngram'].data = {
+        self.source['Term Counts'].data = {
             'Terms': ngram['terms'],
             'Term Count': ngram['term_count'],
             'Document Count': ngram['Document Count']
         }
 
-        self.factors['ngram'] = ngram['terms'].tolist()
+        self.factors['Term Counts'] = ngram['terms'].tolist()
 
-        self.input['axis_range']['ngram'].end = len(self.factors['ngram'])
-        self.set_axis_range(None, None, self.input['axis_range']['ngram'].value, 'ngram', 50)
+        self.input['axis_range']['Term Counts'].end = len(self.factors['Term Counts'])
+        self.set_axis_range(None, None, self.input['axis_range']['Term Counts'].value, 'Term Counts', 50)
 
 
     def set_entity(self, entity):
@@ -73,17 +73,17 @@ class default():
         entity = entity.sort_values(by='Entity Count', ascending=False)
         entity = entity.reset_index(drop=True)
 
-        self.source['entity'].data = {
+        self.source['Entity Name'].data = {
             'Terms': entity['Entity Clean Text'],
             'Term Count': entity['Entity Count'],
             'Document Count': entity['Document Count']
         }
-        self.source['entity'].selected.indices = []
+        self.source['Entity Name'].selected.indices = []
 
-        self.factors['entity'] = entity['Entity Clean Text'].tolist()
+        self.factors['Entity Name'] = entity['Entity Clean Text'].tolist()
 
-        self.input['axis_range']['entity'].end = len(self.factors['entity'])
-        self.set_axis_range(None, None, self.input['axis_range']['entity'].value, 'entity', 30)  
+        self.input['axis_range']['Entity Name'].end = len(self.factors['Entity Name'])
+        self.set_axis_range(None, None, self.input['axis_range']['Entity Name'].value, 'Entity Name', 30)  
 
 
     def default_entity(self):
@@ -117,9 +117,9 @@ class default():
 
     def default_terms(self, fig_name):
 
-        if fig_name == 'ngram':
+        if fig_name == 'Term Counts':
             self.default_ngram()
-        elif fig_name == 'entity':
+        elif fig_name == 'Entity Name':
             self.default_entity()
         elif fig_name == 'Entity Label':
             self.default_entity_label()

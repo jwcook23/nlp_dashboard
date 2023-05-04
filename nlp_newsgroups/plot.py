@@ -36,8 +36,8 @@ class plot(data, model, selections):
 
         self.plot_titles()
         
-        self.plot_bar(factor_axis='x', fig_name='ngram', fig_width=1300, fig_height=300)
-        self.plot_bar(factor_axis='x', fig_name='entity', fig_width=950, fig_height=300)
+        self.plot_bar(factor_axis='x', fig_name='Term Counts', fig_width=1300, fig_height=300)
+        self.plot_bar(factor_axis='x', fig_name='Entity Name', fig_width=950, fig_height=300)
         self.plot_bar(factor_axis='y', fig_name='Entity Label', fig_width=350, fig_height=300)
         self.plot_topics_terms()
         self.plot_topics_weight()
@@ -91,8 +91,8 @@ class plot(data, model, selections):
         self.title = {
             'main': Div(text=f'NLP Dashboard: {len(self.data_input):,} Documents', styles={'font-size': '150%', 'font-weight': 'bold'}, width=350),
             'terms_entity': Div(text='Entity or Term Summary', styles={'font-size': '125%', 'font-weight': 'bold'}, width=150),
-            'ngram': Div(text='Term', styles={'font-weight': 'bold'}, width=75),
-            'entity': Div(text='Entity Name', styles={'font-weight': 'bold'}, width=75),
+            'Term Counts': Div(text='Term', styles={'font-weight': 'bold'}, width=75),
+            'Entity Name': Div(text='Entity Name', styles={'font-weight': 'bold'}, width=75),
             'Entity Label': Div(text='Entity Label', styles={'font-weight': 'bold'}, width=75),
             'topics': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
             'sample': Div(text='', styles={'font-weight': 'bold', 'font-size': '125%'}, width=250, visible=False)
