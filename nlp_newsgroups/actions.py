@@ -130,11 +130,11 @@ class actions(default):
         text = list(text)
 
         document = self.sample_entity_labels[
-            self.sample_entity_labels['document_idx']==document_idx
+            self.sample_entity_labels['Document Index']==document_idx
         ]
         for document_idx, row in document.iterrows():
-            text[row['start_char']] = f"<strong>{text[row['start_char']]}"
-            text[row['end_char']-1] = f"{text[row['end_char']-1]}</strong><sup>{row['entity_label']}</sup>"
+            text[row['Start Character Index']] = f"<strong>{text[row['Start Character Index']]}"
+            text[row['End Character Index']-1] = f"{text[row['End Character Index']-1]}</strong><sup>{row['Entity Label']}</sup>"
 
         text = ''.join(text) 
 

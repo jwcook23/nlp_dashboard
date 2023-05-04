@@ -99,7 +99,7 @@ class model():
         self.ngram['summary'] = pd.DataFrame({
             'terms': self.ngram['terms'],
             'term_count': np.asarray(self.ngram['features'].sum(axis=0)).ravel(),
-            'document_count': np.asarray((self.ngram['features']>0).sum(axis=0)).ravel()
+            'Document Count': np.asarray((self.ngram['features']>0).sum(axis=0)).ravel()
         })
         self.ngram['summary'] = self.ngram['summary'].sort_values('term_count', ascending=False)
 

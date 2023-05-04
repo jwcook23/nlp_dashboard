@@ -51,7 +51,7 @@ class selections(actions):
 
         if fig_name=='ngram':
             self.selected_ngram(row_source)
-        elif fig_name=='entity_label':
+        elif fig_name=='Entity Label':
             self.selected_entity_label(row_source)
         elif fig_name=='entity':
             self.selected_entity(row_source)
@@ -74,7 +74,7 @@ class selections(actions):
         # TODO: show distribution of term importance
         topic_terms = self.topic['terms']
         labeled_entity = self.entity['terms'].loc[
-            self.entity['terms']['document_idx'].isin(document_idx)
+            self.entity['terms']['Document Index'].isin(document_idx)
         ]
         self.set_samples(sample_title, text, selected_terms, topic_terms, labeled_entity)
 
@@ -84,9 +84,9 @@ class selections(actions):
         if len(row_source)==0:
             return    
         
-        selected = self.source['entity_label'].data['Terms'].iloc[row_source]
+        selected = self.source['Entity Label'].data['Terms'].iloc[row_source]
         entity = self.entity['summary'][
-            self.entity['summary']['entity_label'].isin(selected)
+            self.entity['summary']['Entity Label'].isin(selected)
         ]
 
         self.set_entity(entity)
@@ -99,13 +99,13 @@ class selections(actions):
         
         selected_terms = self.source['entity'].data['Terms'].iloc[row_source]
         document_idx = self.entity['terms'].loc[
-            self.entity['terms']['entity_clean'].isin(selected_terms), 'document_idx'
+            self.entity['terms']['Entity Clean Text'].isin(selected_terms), 'Document Index'
         ].drop_duplicates()
         labeled_entity = self.entity['terms'][
-            self.entity['terms']['document_idx'].isin(document_idx)
+            self.entity['terms']['Document Index'].isin(document_idx)
         ]
 
-        self.default_selections(event='selected_entity', ignore=pd.Series(['entity','entity_label']))
+        self.default_selections(event='selected_entity', ignore=pd.Series(['entity','Entity Label']))
 
         sample_title = self.title['entity'].text
 
@@ -142,7 +142,7 @@ class selections(actions):
         self.set_topic_term_importance(title, topic_terms)
 
         labeled_entity = self.entity['terms'].loc[
-            self.entity['terms']['document_idx'].isin(document_idx)
+            self.entity['terms']['Document Index'].isin(document_idx)
         ]
 
         self.set_samples(title, text, None, labeled_entity)

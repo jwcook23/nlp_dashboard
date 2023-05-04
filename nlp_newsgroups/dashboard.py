@@ -64,8 +64,8 @@ class dashboard(plot):
             TabPanel(
                 child=row(
                     column(
-                        row(self.title['entity_label'], self.input['axis_range']['entity_label']),
-                        self.figure['entity_label'],
+                        row(self.title['Entity Label'], self.input['axis_range']['Entity Label']),
+                        self.figure['Entity Label'],
                     ),
                     column(
                         row(self.title['entity'], self.input['axis_range']['entity']), 

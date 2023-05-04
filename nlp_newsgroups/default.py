@@ -56,7 +56,7 @@ class default():
         self.source['ngram'].data = {
             'Terms': ngram['terms'],
             'Term Count': ngram['term_count'],
-            'Document Count': ngram['document_count']
+            'Document Count': ngram['Document Count']
         }
 
         self.factors['ngram'] = ngram['terms'].tolist()
@@ -67,20 +67,20 @@ class default():
 
     def set_entity(self, entity):
 
-        entity = entity.groupby('entity_clean')
-        entity = entity.agg({'entity_count': sum, 'document_count': sum})
+        entity = entity.groupby('Entity Clean Text')
+        entity = entity.agg({'Entity Count': sum, 'Document Count': sum})
         entity = entity.reset_index()
-        entity = entity.sort_values(by='entity_count', ascending=False)
+        entity = entity.sort_values(by='Entity Count', ascending=False)
         entity = entity.reset_index(drop=True)
 
         self.source['entity'].data = {
-            'Terms': entity['entity_clean'],
-            'Term Count': entity['entity_count'],
-            'Document Count': entity['document_count']
+            'Terms': entity['Entity Clean Text'],
+            'Term Count': entity['Entity Count'],
+            'Document Count': entity['Document Count']
         }
         self.source['entity'].selected.indices = []
 
-        self.factors['entity'] = entity['entity_clean'].tolist()
+        self.factors['entity'] = entity['Entity Clean Text'].tolist()
 
         self.input['axis_range']['entity'].end = len(self.factors['entity'])
         self.set_axis_range(None, None, self.input['axis_range']['entity'].value, 'entity', 30)  
@@ -96,23 +96,23 @@ class default():
 
         entity = self.entity['terms']
 
-        entity = entity.groupby('entity_label')
-        entity = entity.agg({'entity_clean': 'nunique', 'document_idx': 'nunique'})
-        entity = entity.rename(columns={'entity_clean': 'entity_count', 'document_idx': 'document_count'})
+        entity = entity.groupby('Entity Label')
+        entity = entity.agg({'Entity Clean Text': 'nunique', 'Document Index': 'nunique'})
+        entity = entity.rename(columns={'Entity Clean Text': 'Entity Count', 'Document Index': 'Document Count'})
         entity = entity.reset_index()
-        entity = entity.sort_values(by='entity_count', ascending=False)
+        entity = entity.sort_values(by='Entity Count', ascending=False)
         entity = entity.reset_index(drop=True)
         # TODO: rename for clarity (plot_term function also needs adjustent)
-        self.source['entity_label'].data = {
-            'Terms': entity['entity_label'],
-            'Term Count': entity['entity_count'],
-            'Document Count': entity['document_count']
+        self.source['Entity Label'].data = {
+            'Terms': entity['Entity Label'],
+            'Term Count': entity['Entity Count'],
+            'Document Count': entity['Document Count']
         }
 
-        self.factors['entity_label'] = entity['entity_label'].tolist()
+        self.factors['Entity Label'] = entity['Entity Label'].tolist()
 
-        self.input['axis_range']['entity_label'].end = len(self.factors['entity_label'])
-        self.set_axis_range(None, None, self.input['axis_range']['entity_label'].value, 'entity_label', 10)
+        self.input['axis_range']['Entity Label'].end = len(self.factors['Entity Label'])
+        self.set_axis_range(None, None, self.input['axis_range']['Entity Label'].value, 'Entity Label', 10)
 
 
     def default_terms(self, fig_name):
@@ -121,7 +121,7 @@ class default():
             self.default_ngram()
         elif fig_name == 'entity':
             self.default_entity()
-        elif fig_name == 'entity_label':
+        elif fig_name == 'Entity Label':
             self.default_entity_label()
 
 

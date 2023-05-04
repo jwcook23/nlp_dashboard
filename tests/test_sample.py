@@ -70,10 +70,10 @@ def test_recalculate_model(db):
 @pytest.mark.parametrize('db', [('selected_entity_label')], indirect=True)
 def test_selected_entity_label(db):
 
-    row_source = db.source['entity_label'].data['Terms'][
-        db.source['entity_label'].data['Terms']=='PRODUCT'
+    row_source = db.source['Entity Label'].data['Terms'][
+        db.source['Entity Label'].data['Terms']=='PRODUCT'
     ].index
 
-    db.selected_source(None, None, row_source=row_source, fig_name='entity_label')
+    db.selected_source(None, None, row_source=row_source, fig_name='Entity Label')
 
     db.selected_source(None, None, row_source=[0], fig_name='entity')
