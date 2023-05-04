@@ -121,9 +121,9 @@ class selections(actions):
         if len(new)==0:
             return
 
-        self.default_selections(event='selected_topic', ignore=pd.Series(['topic_number']))
+        self.default_selections(event='selected_topic', ignore=pd.Series(['Topic Number']))
 
-        self.topic_number = self.source['topic_number'].data['Topic'].iloc[new].values[0]
+        self.topic_number = self.source['Topic Number'].data['Topic'].iloc[new].values[0]
 
         topic_documents = self.topic['weight'][
             (self.topic['weight']['Topic']==self.topic_number) & (self.topic['weight']['Rank']==1)

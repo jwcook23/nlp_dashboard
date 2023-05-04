@@ -135,23 +135,23 @@ class default():
 
         source_data, source_text = self.topic_treemap()
 
-        self.source['topics'].data = source_data
-        self.source['topic_number'].data = source_text.to_dict(orient='series')
+        self.source['Topic Terms'].data = source_data
+        self.source['Topic Number'].data = source_text.to_dict(orient='series')
 
-        factors = self.source['topics'].data['Topic'].drop_duplicates().reset_index(drop=True)
+        factors = self.source['Topic Terms'].data['Topic'].drop_duplicates().reset_index(drop=True)
         self.topic_color = factor_cmap("Topic", palette=Category10[10], factors=factors)
 
 
     def default_topic_term_weight(self):
 
-        self.figure['topic_distribution'].title.text = 'Select in Topic Summary or Predict Topic to Display'
-        self.figure['topic_distribution'].x_range.factors = []
-        if self.figure['topic_distribution'].renderers:
-            self.figure['topic_distribution'].renderers = []
+        self.figure['Topic Distribution'].title.text = 'Select in Topic Summary or Predict Topic to Display'
+        self.figure['Topic Distribution'].x_range.factors = []
+        if self.figure['Topic Distribution'].renderers:
+            self.figure['Topic Distribution'].renderers = []
 
 
     def default_topic_weight(self):
 
         source = self.topic['rollup']
         source = source.reset_index().to_dict(orient='list')
-        self.source['topic_weight'].data = source
+        self.source['Topic Weight'].data = source

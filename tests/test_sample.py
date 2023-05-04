@@ -25,8 +25,8 @@ def test_selected_ngram(db):
 @pytest.mark.parametrize('db', [('selected_topic')], indirect=True)
 def test_selected_topic(db):
 
-    row_source = db.source['topic_number'].data['Topic'][
-        db.source['topic_number'].data['Topic']=='Unnamed # 7'
+    row_source = db.source['Topic Number'].data['Topic'][
+        db.source['Topic Number'].data['Topic']=='Unnamed # 7'
     ].index
     db.selected_topic(None, None, row_source)
 
@@ -34,8 +34,8 @@ def test_selected_topic(db):
 @pytest.mark.parametrize('db', [('selected_sample')], indirect=True)
 def test_selected_sample(db):
 
-    row_source = db.source['topic_number'].data['Topic'][
-        db.source['topic_number'].data['Topic']=='Unnamed # 7'
+    row_source = db.source['Topic Number'].data['Topic'][
+        db.source['Topic Number'].data['Topic']=='Unnamed # 7'
     ].index
     db.selected_topic(None, None, row_source)
     db.sample_toggle.active = db.sample_toggle.labels.index('Document Samples')

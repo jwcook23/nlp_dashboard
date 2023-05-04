@@ -143,8 +143,8 @@ class actions(default):
 
     def set_topic_weight(self, distribution):
 
-        self.figure['topic_weight'].y_range.factors = distribution.loc[distribution['Weight']>0, 'Topic'].values
-        self.source['topic_weight'].data = distribution.to_dict(orient='list')
+        self.figure['Topic Weight'].y_range.factors = distribution.loc[distribution['Weight']>0, 'Topic'].values
+        self.source['Topic Weight'].data = distribution.to_dict(orient='list')
 
 
     def get_topic_prediction(self, event):
@@ -185,14 +185,14 @@ class actions(default):
         idx = self.topic['name'].index(self.topic_number)
         new_name = self.input['topic_name'].value
         self.topic['name'][idx] = new_name
-        self.figure['topic_weight'].y_range.factors = self.topic['name']
+        self.figure['Topic Weight'].y_range.factors = self.topic['name']
         
         self.topic['summary']['Topic'] = self.topic['summary']['Topic'].replace(self.topic_number, new_name)
         self.topic['rollup'] = self.topic['rollup'].reset_index()
         self.topic['rollup']['Topic'] = self.topic['rollup']['Topic'].replace(self.topic_number, new_name)
         self.topic['rollup'] = self.topic['rollup'].set_index('Topic')
         self.topic['weight']['Topic'] = self.topic['weight']['Topic'].replace(self.topic_number, new_name)
-        self.glyph['topic_term'].glyph.fill_color = self.topic_color
+        self.glyph['Topic Terms'].glyph.fill_color = self.topic_color
 
         self.default_figures(None)
 
@@ -202,19 +202,19 @@ class actions(default):
         start = floor(new[0])-1
         end = ceil(new[1])
 
-        self.figure['topic_distribution'].x_range.factors = self.topic_distribution_factors[start:end+1]
-        self.figure['topic_distribution'].xaxis[0].axis_label = f'Terms {start+1}-{end}'
+        self.figure['Topic Distribution'].x_range.factors = self.topic_distribution_factors[start:end+1]
+        self.figure['Topic Distribution'].xaxis[0].axis_label = f'Terms {start+1}-{end}'
 
 
     def set_topic_term_weight(self, title_text, topic_terms):
 
-        self.figure['topic_distribution'].title.text = title_text
+        self.figure['Topic Distribution'].title.text = title_text
 
         self.topic_distribution_factors = topic_terms['Term'].drop_duplicates().tolist()
-        self.figure['topic_distribution'].x_range.factors = self.topic_distribution_factors
+        self.figure['Topic Distribution'].x_range.factors = self.topic_distribution_factors
 
-        if self.figure['topic_distribution'].renderers:
-            self.figure['topic_distribution'].right = []
+        if self.figure['Topic Distribution'].renderers:
+            self.figure['Topic Distribution'].right = []
 
         topics = topic_terms['Topic'].drop_duplicates()
         for topic_number in topics.values:
@@ -229,10 +229,10 @@ class actions(default):
             ].index[0]
             topic_color = self.topic_color.transform.palette[idx]
             
-            self.figure['topic_distribution'].line(
+            self.figure['Topic Distribution'].line(
                 x='Term', y='Weight', source=source, line_width=4, line_color=topic_color
             )
-            self.figure['topic_distribution'].square(
+            self.figure['Topic Distribution'].square(
                 x='Term', y='Weight', source=source, size=10, fill_color=topic_color, line_color=None
             )
 

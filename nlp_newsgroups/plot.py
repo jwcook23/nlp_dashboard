@@ -94,7 +94,7 @@ class plot(data, model, selections):
             'Term Counts': Div(text='Term', styles={'font-weight': 'bold'}, width=75),
             'Entity Name': Div(text='Entity Name', styles={'font-weight': 'bold'}, width=75),
             'Entity Label': Div(text='Entity Label', styles={'font-weight': 'bold'}, width=75),
-            'topics': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
+            'Topic Terms': Div(text='Document Topics', styles={'font-size': '125%', 'font-weight': 'bold'}, width=200),
             'sample': Div(text='', styles={'font-weight': 'bold', 'font-size': '125%'}, width=250, visible=False)
         }
 
@@ -113,7 +113,7 @@ class plot(data, model, selections):
         topics_combined = topics_combined.sort_values(by='Weight')
 
         topics_rollup = topics_combined.groupby('Topic').sum('Weight').sort_values(by='Weight')
-        source_text = treemap(topics_rollup, "Weight", 0, 0, self.figure['topics'].width, self.figure['topics'].height)
+        source_text = treemap(topics_rollup, "Weight", 0, 0, self.figure['Topic Terms'].width, self.figure['Topic Terms'].height)
 
         source_data = pd.DataFrame()
         for _, (Topic, _, _, x, y, dx, dy) in source_text.iterrows():
@@ -198,49 +198,49 @@ class plot(data, model, selections):
 
     def plot_topics_terms(self):
 
-        self.figure['topics'] = figure(
+        self.figure['Topic Terms'] = figure(
             width=1250, height=300, toolbar_location=None,
             x_axis_location=None, y_axis_location=None, title='Topic Term Weight (top 10 terms)'
         )
-        self.figure['topics'].x_range.range_padding = self.figure['topics'].y_range.range_padding = 0
-        self.figure['topics'].grid.grid_line_color = None
-        self.source['topics'] = ColumnDataSource()
-        self.source['topic_number'] = ColumnDataSource()
+        self.figure['Topic Terms'].x_range.range_padding = self.figure['Topic Terms'].y_range.range_padding = 0
+        self.figure['Topic Terms'].grid.grid_line_color = None
+        self.source['Topic Terms'] = ColumnDataSource()
+        self.source['Topic Number'] = ColumnDataSource()
         
         self.default_topics_terms()
 
-        self.glyph['topic_term'] = self.figure['topics'].block(
-            'x', 'y', 'dx', 'dy', source=self.source['topics'], line_width=1, line_color="white",
+        self.glyph['Topic Terms'] = self.figure['Topic Terms'].block(
+            'x', 'y', 'dx', 'dy', source=self.source['Topic Terms'], line_width=1, line_color="white",
             fill_alpha=0.8, fill_color=self.topic_color
         )
-        hover_topic_term = HoverTool(renderers=[self.glyph['topic_term']], tooltips=[('Term', '@Term')])
-        self.figure['topics'].add_tools(hover_topic_term)
+        hover_topic_term = HoverTool(renderers=[self.glyph['Topic Terms']], tooltips=[('Term', '@Term')])
+        self.figure['Topic Terms'].add_tools(hover_topic_term)
 
-        self.glyph['topic_number'] = self.figure['topics'].text(
-            'x', 'y', x_offset=2, text="Topic", source=self.source['topic_number'],
+        self.glyph['Topic Number'] = self.figure['Topic Terms'].text(
+            'x', 'y', x_offset=2, text="Topic", source=self.source['Topic Number'],
             text_font_size="18pt", text_color="white"
         )
-        hover_topic_number = HoverTool(renderers=[self.glyph['topic_number']], tooltips=[('Topic', '@Topic')])
-        self.figure['topics'].add_tools(hover_topic_number)
-        self.figure['topics'].add_tools(TapTool(renderers=[self.glyph['topic_number']]))
-        self.source['topic_number'].selected.on_change('indices', self.selected_topic)
+        hover_topic_number = HoverTool(renderers=[self.glyph['Topic Number']], tooltips=[('Topic', '@Topic')])
+        self.figure['Topic Terms'].add_tools(hover_topic_number)
+        self.figure['Topic Terms'].add_tools(TapTool(renderers=[self.glyph['Topic Number']]))
+        self.source['Topic Number'].selected.on_change('indices', self.selected_topic)
 
-        self.figure['topics'].text('x', 'ytop', x_offset=2, y_offset=2, text="Term", source=self.source['topics'],
+        self.figure['Topic Terms'].text('x', 'ytop', x_offset=2, y_offset=2, text="Term", source=self.source['Topic Terms'],
             text_font_size="10pt", text_baseline="top",
         )
 
 
     def plot_topics_weight(self):
 
-        self.source['topic_weight'] = ColumnDataSource({'Topic':[], 'Weight':[]})
+        self.source['Topic Weight'] = ColumnDataSource({'Topic':[], 'Weight':[]})
 
-        self.figure['topic_weight'] = figure(
-            y_range=self.topic_color.transform.factors, width=300, height=200, title='Topic Name Color',
+        self.figure['Topic Weight'] = figure(
+            y_range=self.topic_color.transform.factors, width=300, height=200, title='Topic Distribution & Color Legend',
             x_axis_label='Weight', toolbar_location=None
         )
 
-        self.figure['topic_weight'].hbar(
-            y='Topic', right='Weight', source=self.source['topic_weight'], fill_color=self.topic_color
+        self.figure['Topic Weight'].hbar(
+            y='Topic', right='Weight', source=self.source['Topic Weight'], fill_color=self.topic_color
         )
 
         self.default_topic_weight()
@@ -248,10 +248,10 @@ class plot(data, model, selections):
 
     def plot_topic_term_weight(self):
 
-        self.figure['topic_distribution'] = figure(
+        self.figure['Topic Distribution'] = figure(
             width=950, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Weight', title=''
         )
-        self.figure['topic_distribution'].xaxis.major_label_orientation = pi/8
+        self.figure['Topic Distribution'].xaxis.major_label_orientation = pi/8
         self.input['topic_distribution_range'] = RangeSlider(start=1, end=2, value=(1,2), step=1, title='Term Range Displayed', width=125)
         self.input['topic_distribution_range'].on_change('value', self.set_topic_term_weight_range)
         self.default_topic_term_weight()

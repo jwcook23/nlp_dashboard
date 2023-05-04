@@ -50,9 +50,9 @@ class dashboard(plot):
         tab_options = Tabs(tabs=[
             TabPanel(
                 child=column(
-                    self.title['topics'],
+                    self.title['Topic Terms'],
                     row(self.set_topic_name, self.input['topic_name'], self.input['topic_description']),
-                    self.figure['topics']
+                    self.figure['Topic Terms']
                 ), title='Topic Summary'
             ),
             TabPanel(
@@ -96,8 +96,8 @@ class dashboard(plot):
                 row(self.title['main'], self.input['reset']),
                 tab_options,
                 row(
-                    column(self.figure['topic_weight'], self.sample_toggle, self.sample_number),
-                    column(self.input['topic_distribution_range'], self.figure['topic_distribution'])
+                    column(self.figure['Topic Weight'], self.sample_toggle, self.sample_number),
+                    column(self.input['topic_distribution_range'], self.figure['Topic Distribution'])
                 )
             ),
             column(
