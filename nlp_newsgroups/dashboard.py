@@ -6,7 +6,7 @@
 # TODO: better sample highlighting for topic terms and labeled entities
 # TODO: generalize cross-filtering for documents for all figures?
 
-# TODO: ability to lookup words (topics they are assigned to and their importance)
+# TODO: ability to lookup words (topics they are assigned to and their weight)
 # TODO: n-gram topic count in addition to document count (option to fit the above todo?)
 
 # TODO: compare topic models
@@ -96,7 +96,7 @@ class dashboard(plot):
                 row(self.title['main'], self.input['reset']),
                 tab_options,
                 row(
-                    column(self.figure['topic_confidence'], self.sample_toggle, self.sample_number),
+                    column(self.figure['topic_weight'], self.sample_toggle, self.sample_number),
                     column(self.input['topic_distribution_range'], self.figure['topic_distribution'])
                 )
             ),

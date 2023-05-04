@@ -73,12 +73,12 @@ class actions(default):
 
     def find_topic_terms(self, document_idx):
 
-        topic_confidence = self.topic['confidence'].loc[
-            (self.topic['confidence'].index==document_idx) & (self.topic['confidence']['Confidence']>0),
-            ['Topic','Confidence']
+        topic_weight = self.topic['weight'].loc[
+            (self.topic['weight'].index==document_idx) & (self.topic['weight']['Weight']>0),
+            ['Topic','Weight']
         ]
         
-        topic_terms = topic_confidence.merge(self.topic['summary'][['Topic','Term','Weight']], on='Topic')
+        topic_terms = topic_weight.merge(self.topic['summary'][['Topic','Term','Weight']], on='Topic')
         topic_terms = topic_terms[topic_terms['Weight']>0]
 
         topic_terms = topic_terms[
@@ -89,7 +89,7 @@ class actions(default):
             )
         ]
 
-        return topic_confidence, topic_terms
+        return topic_weight, topic_terms
 
 
     def find_topic_colors(self, document):
@@ -105,12 +105,12 @@ class actions(default):
         return lookup
 
 
-    def highlight_topics(self, text, document_idx, topic_confidence, topic_terms):
+    def highlight_topics(self, text, document_idx, topic_weight, topic_terms):
 
         if document_idx is not None:
-            topic_confidence, topic_terms = self.find_topic_terms(document_idx)
+            topic_weight, topic_terms = self.find_topic_terms(document_idx)
 
-        self.set_topic_confidence(topic_confidence)
+        self.set_topic_weight(topic_weight)
 
         if len(topic_terms)==0:
             return text
@@ -141,10 +141,10 @@ class actions(default):
         return text
 
 
-    def set_topic_confidence(self, distribution):
+    def set_topic_weight(self, distribution):
 
-        self.figure['topic_confidence'].y_range.factors = distribution.loc[distribution['Confidence']>0, 'Topic'].values
-        self.source['topic_confidence'].data = distribution.to_dict(orient='list')
+        self.figure['topic_weight'].y_range.factors = distribution.loc[distribution['Weight']>0, 'Topic'].values
+        self.source['topic_weight'].data = distribution.to_dict(orient='list')
 
 
     def get_topic_prediction(self, event):
@@ -155,9 +155,9 @@ class actions(default):
 
         features = self.topic['vectorizer'].transform(text)
 
-        topic_confidence = self.assign_topic(self.topic['model'], features)
+        topic_weight = self.assign_topic(self.topic['model'], features)
 
-        predicted_topic = topic_confidence.loc[topic_confidence['Confidence']>0, 'Topic']
+        predicted_topic = topic_weight.loc[topic_weight['Weight']>0, 'Topic']
         
         idx = features.nonzero()[1]
         topic_terms = pd.DataFrame({
@@ -170,13 +170,13 @@ class actions(default):
 
         title = topic_terms['Topic'].drop_duplicates()
         title = f"Predicted Topics = {', '.join(title)}"
-        self.set_topic_term_importance(title, topic_terms)
+        self.set_topic_term_weight(title, topic_terms)
         
         self.set_samples(
             'Topic Prediction', text, selected_terms=None, labeled_entity=None
         )
 
-        self.selected_sample(None, None, self.sample_number.value, topic_confidence, topic_terms)
+        self.selected_sample(None, None, self.sample_number.value, topic_weight, topic_terms)
 
 
     def rename_topic(self, event):
@@ -185,19 +185,19 @@ class actions(default):
         idx = self.topic['name'].index(self.topic_number)
         new_name = self.input['topic_name'].value
         self.topic['name'][idx] = new_name
-        self.figure['topic_confidence'].y_range.factors = self.topic['name']
+        self.figure['topic_weight'].y_range.factors = self.topic['name']
         
         self.topic['summary']['Topic'] = self.topic['summary']['Topic'].replace(self.topic_number, new_name)
         self.topic['rollup'] = self.topic['rollup'].reset_index()
         self.topic['rollup']['Topic'] = self.topic['rollup']['Topic'].replace(self.topic_number, new_name)
         self.topic['rollup'] = self.topic['rollup'].set_index('Topic')
-        self.topic['confidence']['Topic'] = self.topic['confidence']['Topic'].replace(self.topic_number, new_name)
+        self.topic['weight']['Topic'] = self.topic['weight']['Topic'].replace(self.topic_number, new_name)
         self.glyph['topic_term'].glyph.fill_color = self.topic_color
 
         self.default_figures(None)
 
     
-    def set_topic_term_importance_range(self, attr, old, new):
+    def set_topic_term_weight_range(self, attr, old, new):
 
         start = floor(new[0])-1
         end = ceil(new[1])
@@ -206,7 +206,7 @@ class actions(default):
         self.figure['topic_distribution'].xaxis[0].axis_label = f'Terms {start+1}-{end}'
 
 
-    def set_topic_term_importance(self, title_text, topic_terms):
+    def set_topic_term_weight(self, title_text, topic_terms):
 
         self.figure['topic_distribution'].title.text = title_text
 
@@ -238,7 +238,7 @@ class actions(default):
 
         self.input['topic_distribution_range'].end = len(self.topic_distribution_factors)
         self.input['topic_distribution_range'].value = (1, min(self.input['topic_distribution_range'].end, 25))
-        self.set_topic_term_importance_range(None, None, self.input['topic_distribution_range'].value)
+        self.set_topic_term_weight_range(None, None, self.input['topic_distribution_range'].value)
 
 
     def set_axis_range(self, attr, old, new, fig_name, num_factors):

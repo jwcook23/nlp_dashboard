@@ -24,12 +24,12 @@ class selections(actions):
             self.selected_sample(None, None, 0, None, None)
 
 
-    def selected_sample(self, attr, old, new, topic_confidence, topic_terms):
+    def selected_sample(self, attr, old, new, topic_weight, topic_terms):
 
         if self.sample_text is not None:
 
             text = self.sample_text.iloc[new]
-            if topic_confidence is None:
+            if topic_weight is None:
                 document_idx = self.sample_text.index[self.sample_number.value]
             else:
                 document_idx = None
@@ -42,7 +42,7 @@ class selections(actions):
             if self.sample_selected_terms is not None:
                 text = self.surround_html_tag(text, self.sample_selected_terms, 'selected_terms')
 
-            text = self.highlight_topics(text, document_idx, topic_confidence, topic_terms)
+            text = self.highlight_topics(text, document_idx, topic_weight, topic_terms)
        
             self.sample_document.text = text
 
@@ -71,7 +71,7 @@ class selections(actions):
 
         text = self.data_input[document_idx]
 
-        # TODO: show distribution of term importance
+        # TODO: show distribution of term weight
         topic_terms = self.topic['terms']
         labeled_entity = self.entity['terms'].loc[
             self.entity['terms']['Document Index'].isin(document_idx)
@@ -111,7 +111,7 @@ class selections(actions):
 
         text = self.data_input[document_idx]
 
-        # TODO: show distribution of term importance
+        # TODO: show distribution of term weight
         topic_terms = self.topic['terms']
         self.set_samples(sample_title, text, selected_terms, topic_terms, labeled_entity)
 
@@ -125,8 +125,8 @@ class selections(actions):
 
         self.topic_number = self.source['topic_number'].data['Topic'].iloc[new].values[0]
 
-        topic_documents = self.topic['confidence'][
-            (self.topic['confidence']['Topic']==self.topic_number) & (self.topic['confidence']['Rank']==1)
+        topic_documents = self.topic['weight'][
+            (self.topic['weight']['Topic']==self.topic_number) & (self.topic['weight']['Rank']==1)
         ]
 
         document_idx = topic_documents.index
@@ -139,7 +139,7 @@ class selections(actions):
         title = f'Selected Topic = {self.topic_number}'
 
 
-        self.set_topic_term_importance(title, topic_terms)
+        self.set_topic_term_weight(title, topic_terms)
 
         labeled_entity = self.entity['terms'].loc[
             self.entity['terms']['Document Index'].isin(document_idx)

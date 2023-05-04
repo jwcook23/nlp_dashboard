@@ -40,8 +40,8 @@ class plot(data, model, selections):
         self.plot_bar(factor_axis='x', fig_name='entity', fig_width=950, fig_height=300)
         self.plot_bar(factor_axis='y', fig_name='Entity Label', fig_width=350, fig_height=300)
         self.plot_topics_terms()
-        self.plot_topics_confidence()
-        self.plot_topic_term_importance()
+        self.plot_topics_weight()
+        self.plot_topic_term_weight()
         self.plot_assignment()
         self.predict_topics()
         self.plot_samples()
@@ -141,7 +141,7 @@ class plot(data, model, selections):
         self.sample_toggle.on_event('button_click', self.activate_samples)
         
         self.sample_number = Spinner(low=0, high=1, value=0, step=1, width=100, visible=False)
-        self.sample_number.on_change('value', partial(self.selected_sample,topic_confidence=None,topic_terms=None))
+        self.sample_number.on_change('value', partial(self.selected_sample,topic_weight=None,topic_terms=None))
 
         self.default_samples()
 
@@ -200,7 +200,7 @@ class plot(data, model, selections):
 
         self.figure['topics'] = figure(
             width=1250, height=300, toolbar_location=None,
-            x_axis_location=None, y_axis_location=None, title='Topic Term Importance (top 10 terms)'
+            x_axis_location=None, y_axis_location=None, title='Topic Term Weight (top 10 terms)'
         )
         self.figure['topics'].x_range.range_padding = self.figure['topics'].y_range.range_padding = 0
         self.figure['topics'].grid.grid_line_color = None
@@ -230,31 +230,31 @@ class plot(data, model, selections):
         )
 
 
-    def plot_topics_confidence(self):
+    def plot_topics_weight(self):
 
-        self.source['topic_confidence'] = ColumnDataSource({'Topic':[], 'Confidence':[]})
+        self.source['topic_weight'] = ColumnDataSource({'Topic':[], 'Weight':[]})
 
-        self.figure['topic_confidence'] = figure(
+        self.figure['topic_weight'] = figure(
             y_range=self.topic_color.transform.factors, width=300, height=200, title='Topic Name Color',
-            x_axis_label='Confidence', toolbar_location=None
+            x_axis_label='Weight', toolbar_location=None
         )
 
-        self.figure['topic_confidence'].hbar(
-            y='Topic', right='Confidence', source=self.source['topic_confidence'], fill_color=self.topic_color
+        self.figure['topic_weight'].hbar(
+            y='Topic', right='Weight', source=self.source['topic_weight'], fill_color=self.topic_color
         )
 
-        self.default_topic_confidence()
+        self.default_topic_weight()
 
 
-    def plot_topic_term_importance(self):
+    def plot_topic_term_weight(self):
 
         self.figure['topic_distribution'] = figure(
-            width=950, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Importance', title=''
+            width=950, height=200, toolbar_location=None, tools="tap", x_range=[], y_axis_label='Weight', title=''
         )
         self.figure['topic_distribution'].xaxis.major_label_orientation = pi/8
         self.input['topic_distribution_range'] = RangeSlider(start=1, end=2, value=(1,2), step=1, title='Term Range Displayed', width=125)
-        self.input['topic_distribution_range'].on_change('value', self.set_topic_term_importance_range)
-        self.default_topic_term_importance()
+        self.input['topic_distribution_range'].on_change('value', self.set_topic_term_weight_range)
+        self.default_topic_term_weight()
 
 
     def plot_assignment(self):

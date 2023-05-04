@@ -106,15 +106,15 @@ class model():
 
     def assign_topic(self, topic_model, features):
 
-        topic_confidence = topic_model.transform(features)
-        topic_confidence = pd.DataFrame.from_records(topic_confidence, columns=self.topic['name'])
-        topic_confidence.index.name = 'Document'
-        topic_confidence = topic_confidence.melt(var_name='Topic', value_name='Confidence', ignore_index=False)
-        topic_confidence = topic_confidence.sort_values(by=['Topic', 'Confidence'], ascending=[True, False])
-        rank = topic_confidence.groupby('Document')['Confidence'].rank(ascending=False).astype('int64')
-        topic_confidence['Rank'] = rank
+        topic_weight = topic_model.transform(features)
+        topic_weight = pd.DataFrame.from_records(topic_weight, columns=self.topic['name'])
+        topic_weight.index.name = 'Document'
+        topic_weight = topic_weight.melt(var_name='Topic', value_name='Weight', ignore_index=False)
+        topic_weight = topic_weight.sort_values(by=['Topic', 'Weight'], ascending=[True, False])
+        rank = topic_weight.groupby('Document')['Weight'].rank(ascending=False).astype('int64')
+        topic_weight['Rank'] = rank
 
-        return topic_confidence
+        return topic_weight
 
 
     @performance.timing
@@ -164,7 +164,7 @@ class model():
             self.topic['name'] += [name]
             self.topic['summary'] = pd.concat([self.topic['summary'], summary])
 
-        self.topic['confidence'] = self.assign_topic(self.topic['model'], self.topic['features'])
+        self.topic['weight'] = self.assign_topic(self.topic['model'], self.topic['features'])
 
         self.topic['rollup'] = self.topic['summary'].groupby('Topic')
         self.topic['rollup'] = self.topic['rollup'].agg({'Weight': sum}).sort_values(by='Weight', ascending=False)
